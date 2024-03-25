@@ -9,7 +9,7 @@ Route::post('/inicio-sesion', [LoginController::class, 'login'])->name('logearse
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::resource('/usuarios', UsersController::class);
-
+Route::get('/usuarios/{id}/eliminar', [UsersController::class, 'destroy'])->name('usuarios.eliminar');
 
 Route::get('/', function () {
     return view('login2');

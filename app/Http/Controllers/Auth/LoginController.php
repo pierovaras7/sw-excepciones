@@ -33,6 +33,10 @@ class LoginController extends Controller
 	    // Si el usuario existe lo logamos y lo llevamos a la vista de "logados" con un mensaje
 	    if (Auth::attempt($credentials)) {
             // dd(Auth::id());
+            $user = User::findOrFail(Auth::id());
+            $user->lastlogin = now()->timezone('America/Lima');
+            $user->save();
+
             LoginHistory::create([
                 'user_id' => Auth::id(), // $event->userId contiene el ID del usuario que inició sesión
                 'login_at' => now()->timezone('America/Lima')
@@ -48,9 +52,15 @@ class LoginController extends Controller
 
     public function logout()
     {
-        //dd('sssssss');
+        $latestLogin = LoginHistory::where('user_id', Auth::id())
+            ->latest('login_at')
+            ->first();
+        $latestLogin->logout_at = now()->timezone('America/Lima');
+        $latestLogin->updateTimestamps(); // Evita que Laravel actualice las marcas de tiempo
+        $latestLogin->save();
+
         Auth::logout(); // Cerrar sesión del usuario
-        //dd('sssssss');
+        
         return redirect('/login'); // Redirigir a la página de inicio de sesión
     }
 }

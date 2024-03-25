@@ -48,6 +48,6 @@ class User extends Authenticatable
 
     public function loginHistories()
     {
-        return $this->hasMany(LoginHistory::class);
+        return $this->hasMany(LoginHistory::class,'user_id');
     }
 }

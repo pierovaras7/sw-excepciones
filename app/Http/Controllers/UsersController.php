@@ -11,26 +11,8 @@ class UsersController extends Controller
     // Método para mostrar todos los usuarios
     public function index()
     {
-       // Obtener todos los usuarios
-            $usuarios = User::all();
-
-            //$user->loginHistories()->latest('login_at')->first();
-            
-            // Array para almacenar los registros más recientes de LoginHistory para cada usuario
-            // $latest = [];
-            $i = 0;
-            // // Iterar sobre cada usuario
-            foreach ($usuarios as $user) {
-                // Obtener el registro más reciente de LoginHistory para este usuario
-                $l = $user->loginHistories()->latest('login_at')->first();
-
-                // Agregar el registro más reciente al array
-                $latest[$i] = $l;
-
-                $i++;
-            }
-            //dd($latestLoginHistory);
-        return view('usuarios.index', compact('usuarios','latest'));
+        $usuarios = User::with('loginHistories')->paginate(10);
+        return view('usuarios.index', compact('usuarios'));
     }
 
     // Método para mostrar el formulario de creación de usuario
@@ -47,19 +29,29 @@ class UsersController extends Controller
             'email' => 'required:unique:users,email',
             'password' => 'required'
             // Agrega aquí otras reglas de validación según tus necesidades
+        ], [
+            '*' => 'Error al crear usuario.'
         ]);
 
-        User::create($request->all());
-        //dd($request->all());
-        return redirect()->route('usuarios.index')
-                          ->with('success', 'Usuario creado correctamente.');
+
+        // Intenta crear el usuario
+        try {
+            User::create($request->all());
+            return redirect()->route('usuarios.index')
+                ->with('result', 'success')
+                ->with('message', 'Usuario creado correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('usuarios.index')
+                ->with('result', 'danger')
+                ->with('message', 'Error al registrar el usuario.');
+        }
     }
 
     // Método para mostrar un usuario específico
     public function show($id)
     {
-        $usuario = User::findOrFail($id);
-        return view('usuarios.show', compact('usuario'));
+        
+
     }
 
     // Método para mostrar el formulario de edición de usuario
@@ -73,25 +65,44 @@ class UsersController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required',
+            'name' => 'required',
             'email' => 'required|unique:users,email,'.$id,
+            'password'  => ''
             // Agrega aquí otras reglas de validación según tus necesidades
         ]);
 
-        $usuario = User::findOrFail($id);
-        $usuario->update($request->all());
-
-        return redirect()->route('usuarios.index')
-                         ->with('success', 'Usuario actualizado correctamente.');
+        try {
+            $usuario = User::findOrFail($id);
+            $usuario->name = $request->name;
+            $usuario->email = $request->email;
+            if ($request->password != '' && $request->password != null){
+                $usuario->password = $request->password;
+            }
+            $usuario->save();
+            return redirect()->route('usuarios.index')
+                ->with('result', 'success')
+                ->with('message', 'Usuario actualizado correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('usuarios.index')
+                ->with('result', 'danger')
+                ->with('message', 'Error al actualizar el usuario.');
+        }
     }
 
     // Método para eliminar un usuario
     public function destroy($id)
     {
-        $usuario = User::findOrFail($id);
-        $usuario->delete();
-
-        return redirect()->route('usuarios.index')
-                         ->with('success', 'Usuario eliminado correctamente.');
+        // Intenta crear el usuario
+        try {
+            $usuario = User::findOrFail($id);
+            $usuario->delete();
+            return redirect()->route('usuarios.index')
+                ->with('result', 'success')
+                ->with('message', 'Usuario eliminado correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('usuarios.index')
+                ->with('result', 'danger')
+                ->with('message', 'Error al eliminar el usuario.');
+        }
     }
 }

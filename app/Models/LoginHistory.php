@@ -12,11 +12,10 @@ class LoginHistory extends Model
     protected $fillable = [
         'user_id',
         'login_at',
+        'logout_at',
     ];
 
-    protected $casts = [
-        'login_at' => 'datetime',
-    ];
+    
 
     public function user()
     {
