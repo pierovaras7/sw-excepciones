@@ -75,7 +75,7 @@
                                 <th>{{$u->id}}</th>
                                 <th>{{$u->name}}</th>
                                 <th>{{$u->email}}</th>
-                                <th>{{$u->loginHistories->first()->login_at ?? 'No ha iniciado sesion aun.'}}</th>
+                                <th>{{$u->lastlogin ?? 'No ha iniciado sesion aun.'}}</th>
                                 <th>
                                     <a href="#" class="btn btn-warning btn-circle btn-sm" title="Editar usuario" data-bs-id="{{$u->id}}" data-toggle="modal" data-target="#editModal{{$u->id}}">
                                         <i class="fa fa-retweet"></i>

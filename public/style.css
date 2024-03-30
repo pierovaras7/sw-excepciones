@@ -5,7 +5,7 @@
 }
 
 
-.container {
+.container{
     display: flex;
     flex-direction: column;
     justify-content: center; /* Centra horizontalmente los elementos hijos */
@@ -13,3 +13,18 @@
     width: 100vh;
     height: 100vh;
 }
+
+.card-tables{
+    border: 1px solid #ccc; /* Borde gris */
+    border-radius: 5px; /* Bordes redondeados */
+    padding: 5px 15px; /* Espacio interno */
+    margin: 10px; /* Margen exterior */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Sombra */
+    background-color: #c6d1ffee; /* Fondo blanco */
+}
+
+
+.card-tables:hover {
+    background-color: #6aabf1; /* Cambia el color de fondo del botón al pasar el cursor sobre él */
+}
+

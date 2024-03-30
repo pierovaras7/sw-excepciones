@@ -32,7 +32,7 @@ class LoginController extends Controller
 	
 	    // Si el usuario existe lo logamos y lo llevamos a la vista de "logados" con un mensaje
 	    if (Auth::attempt($credentials)) {
-            // dd(Auth::id());
+            //dd(Auth::id());
             $user = User::findOrFail(Auth::id());
             $user->lastlogin = now()->timezone('America/Lima');
             $user->save();
@@ -41,8 +41,12 @@ class LoginController extends Controller
                 'user_id' => Auth::id(), // $event->userId contiene el ID del usuario que inició sesión
                 'login_at' => now()->timezone('America/Lima')
             ]);
+
+            $request->session()->forget('conexion');
+            $request->session()->forget('credencialesConsulta');
+
 	        return redirect()->intended('usuarios')
-	            ->withSuccess('Logado Correctamente');
+	            ->withSuccess('Logeado Correctamente');
 	    }
 
         //ndd('xxxx');

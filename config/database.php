@@ -109,6 +109,16 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'dynamic' => [
+            'driver' => 'default_driver',
+            'host' => 'default_host',
+            'port' => '3306',
+            'database' => 'default_database_name',
+            'username' => 'default_username',
+            'password' => 'default_password',
+        ],
+        
+
     ],
 
     /*
