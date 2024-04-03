@@ -49,23 +49,17 @@
         </div>
         <div class="col-12">
             <div class="my-2 text-center">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editModal">
-                    Ver registros
+                <button type="button" class="btn btn-primary" id="btnTableModal" disabled data-toggle="modal" data-target="#tableModal">
+                    Ver informacion de registros
                 </button>
-                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                <div class="modal fade" id="tableModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
                     aria-hiddzen="true">
                     <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
                         <div class="modal-content">
-                            <p class="m-2" id="tableTittle">Resultado de las tablas:</p>
+                            <p class="m-2" id="tableTittle"></p>
                             <div class="table-responsive align p-2">
                                 <table class="table table-bordered text-center m-0 p-0" id="theadInfo" width="100px" cellspacing="0">
                                     <thead id="theadDatos">
-                                        <tr>
-                                            <th style="width: 40%;">Columna</th>
-                                            <th style="width: 20%;">Tipo</th>
-                                            <th style="width: 20%;">¿Es nulo?</th>
-                                            <th style="width: 20%;">Valor por defecto</th>
-                                        </tr>
                                     </thead>
                                     <tbody id="tbodyDatos">
 
@@ -98,6 +92,8 @@
             }
         });
 
+        
+
         $('#verifyForm').submit(function(event) {
             event.preventDefault(); // Previene el envío predeterminado
 
@@ -108,9 +104,9 @@
                 data: $(this).serialize(), // Serializa los datos del formulario para el envío,
                 success: function(response) {
                     // Encuentra el div donde se insertarán los resultados
-                    if(response.results){
-                        if(response.datos){
-                            $('#tableTittle').text('Registros de la tabla: ' +  $('#tabla').val());
+                    if(response.datos){
+                            $('#btnTableModal').prop('disabled',false);
+                            $('#tableTittle').html('<b>Registros de la tabla: ' +  $('#tabla').val())+ '</b>';
                             var encabezados = '';
                             $.each(response.columnas, function(i, columna) {
                                 encabezados += '<th>' + columna.Field + '</th>';
@@ -126,7 +122,8 @@
                                 filas += '</tr>';
                             });
                             $('#tbodyDatos').html(filas); 
-                        }
+                    }
+                    if(response.results){
                         if(response.total > 1){
                             if(response.results.length > 0) {
                                 $('#metrica').addClass('text-center').text(response.results.length +' excepciones encontradas.');
@@ -150,11 +147,17 @@
                                     resultsDiv.append(alertDiv);
                                 })
                             }else{
-                                $('#metrica').text('No se encontraron resultados de excepciones para la busqueda ingresada.');
+                                $('#metrica').text('');
+                                var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada.');
+                                $('#resultExcepciones').empty();
+                                $('#resultExcepciones').append(result);
                             }
                         }
                         else{
-                            $('#metrica').text('No se encontraron resultados de excepciones para la busqueda ingresada. Solo hay 0 o 1 registro.');
+                            $('#metrica').text('');
+                            var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada. Solo hay 0 o 1 registro.');
+                            $('#resultExcepciones').empty();
+                            $('#resultExcepciones').append(result);
                         }
                     }else{
                         $('#metrica').text('');
@@ -184,6 +187,8 @@
         //alert(selectedTableName);
         loadTable(selectedTableName); // Llama a loadTable con ese valor
     });
+
+    
     function loadTable(tableName) {
         $.ajax({
             url: '/cargar-info/'+tableName, // Ruta para cargar la tabla (ajusta según tu aplicación)

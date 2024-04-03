@@ -23,8 +23,12 @@ Route::get('/conexiones', [DatabaseController::class, 'conexiones'])->name('cone
 Route::get('/disconnect', [DatabaseController::class, 'disconnect'])->name('disconnect');
 Route::get('/cargar-infos/{table}', [DatabaseController::class, 'load'])->name('cargarInfo');
 Route::get('/cargar-info/{table}', [DatabaseController::class, 'loadInfo'])->name('cargarInfoTable');
-Route::get('/registros/',[DatabaseController::class, 'exRegistrosShow'])->name('registros');
-Route::post('/registrosResult',[DatabaseController::class, 'exRegistrosResult'])->name('registrosResult');
+Route::get('/registros',[DatabaseController::class, 'exRegistrosShow'])->name('registros');
+Route::get('/campos',[DatabaseController::class, 'exCamposShow'])->name('campos');
+// Route::post('/registrosResult',[DatabaseController::class, 'exRegistrosResult'])->name('registrosResult');
+Route::post('/registrosResult',[DatabaseController::class, 'prueba'])->name('registrosResult');
+
+
 
 // Ruta para procesar la conexión
 Route::post('/connect', [DatabaseController::class, 'connect'])->name('connect');

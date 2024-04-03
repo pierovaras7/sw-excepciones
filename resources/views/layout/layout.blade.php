@@ -55,7 +55,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="index.html">
+                <a class="nav-link" href="{{route('campos')}}">
                     <i class="fas fa-exclamation-triangle"></i>
                     <span>Integridad por Campos</span></a>
             </li>
@@ -302,11 +302,11 @@
             <!-- End of Main Content -->
 
             <!-- Footer -->
-            <footer class="sticky-footer bg-white">
+            <!-- <footer class="sticky-footer bg-white">
                     <div >
                         <span>Copyright &copy; Your Website 2020</span>
                     </div>
-            </footer>
+            </footer> -->
             <!-- End of Footer -->
 
         </div>

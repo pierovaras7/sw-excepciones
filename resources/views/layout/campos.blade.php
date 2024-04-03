@@ -11,14 +11,7 @@
             @csrf
             <!-- Campos para las credenciales de conexión -->
                 <div class="row">
-                    <div class="form-group col">
-                        <label for="excepcion">Tipo de Excepcion:</label>
-                        <select id="excepcion" name="excepcion" class="form-control" required>
-                            <option selected value="unicidad">Unicidad</option>
-                            <option value="secuencia">Secuencia</option>
-                        </select>
-                    </div>
-                    <div class="form-group col">
+                    <div class="form-group col-12">
                         <label for="tabla">Tabla:</label>
                         <select id="tabla" name="tabla" class="form-control" required>
                             @foreach($tablas as $t)
@@ -31,14 +24,18 @@
                         <select id="columna" name="columna" class="form-control" required>
                         </select>
                     </div>
-                    <!-- <div class="form-group col-6 col-md-3">
-                        <label for="fecha">Fecha:</label>
-                        <input type="date" id="fecha" name="fecha" class="form-control">
-                        </input>
-                    </div> -->
-                    <div class="form-group col-12 text-center" id="btnsFormConexion">
+                </div>
+                <div class="row px-2" id="inputsContainer">
+                    <div class="form-group col text-center d-flex align-items-center">
+                        <p>Condiciones: </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col text-center" id="btnsFormConexion">
                         <button id="btnConectar" type="submit" class="btn btn-primary">Verificar</button>
                     </div>
+                </div>
+                <div class="row" id="divColumnas">
                 </div>
             </form>
         </div>
@@ -49,23 +46,17 @@
         </div>
         <div class="col-12">
             <div class="my-2 text-center">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editModal">
-                    Ver registros
+                <button type="button" class="btn btn-primary" id="btnTableModal" disabled data-toggle="modal" data-target="#tableModal">
+                    Ver informacion de registros
                 </button>
-                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                <div class="modal fade" id="tableModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
                     aria-hiddzen="true">
                     <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
                         <div class="modal-content">
-                            <p class="m-2" id="tableTittle">Resultado de las tablas:</p>
+                            <p class="m-2" id="tableTittle"></p>
                             <div class="table-responsive align p-2">
                                 <table class="table table-bordered text-center m-0 p-0" id="theadInfo" width="100px" cellspacing="0">
                                     <thead id="theadDatos">
-                                        <tr>
-                                            <th style="width: 40%;">Columna</th>
-                                            <th style="width: 20%;">Tipo</th>
-                                            <th style="width: 20%;">¿Es nulo?</th>
-                                            <th style="width: 20%;">Valor por defecto</th>
-                                        </tr>
                                     </thead>
                                     <tbody id="tbodyDatos">
 
@@ -86,17 +77,19 @@
 <script>
     //alert($('#excepcion').val());
     $(document).ready(function() {
-         // Escucha el evento change en el select de excepción
-        if($('#excepcion').val() !== 'secuencia') {
-            $('#columna').closest('.form-group').hide();
-        }
-        $('#excepcion').change(function(){
-            if($('#excepcion').val() === 'secuencia') {
-                $('#columna').closest('.form-group').show();
-            } else {
-                $('#columna').closest('.form-group').hide();
-            }
-        });
+        //  // Escucha el evento change en el select de excepción
+        // if($('#excepcion').val() !== 'secuencia') {
+        //     $('#columna').closest('.form-group').hide();
+        // }
+        // $('#excepcion').change(function(){
+        //     if($('#excepcion').val() === 'secuencia') {
+        //         $('#columna').closest('.form-group').show();
+        //     } else {
+        //         $('#columna').closest('.form-group').hide();
+        //     }
+        // });
+
+        
 
         $('#verifyForm').submit(function(event) {
             event.preventDefault(); // Previene el envío predeterminado
@@ -108,9 +101,9 @@
                 data: $(this).serialize(), // Serializa los datos del formulario para el envío,
                 success: function(response) {
                     // Encuentra el div donde se insertarán los resultados
-                    if(response.results){
-                        if(response.datos){
-                            $('#tableTittle').text('Registros de la tabla: ' +  $('#tabla').val());
+                    if(response.datos){
+                            $('#btnTableModal').prop('disabled',false);
+                            $('#tableTittle').html('<b>Registros de la tabla: ' +  $('#tabla').val())+ '</b>';
                             var encabezados = '';
                             $.each(response.columnas, function(i, columna) {
                                 encabezados += '<th>' + columna.Field + '</th>';
@@ -126,7 +119,8 @@
                                 filas += '</tr>';
                             });
                             $('#tbodyDatos').html(filas); 
-                        }
+                    }
+                    if(response.results){
                         if(response.total > 1){
                             if(response.results.length > 0) {
                                 $('#metrica').addClass('text-center').text(response.results.length +' excepciones encontradas.');
@@ -150,11 +144,17 @@
                                     resultsDiv.append(alertDiv);
                                 })
                             }else{
-                                $('#metrica').text('No se encontraron resultados de excepciones para la busqueda ingresada.');
+                                $('#metrica').text('');
+                                var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada.');
+                                $('#resultExcepciones').empty();
+                                $('#resultExcepciones').append(result);
                             }
                         }
                         else{
-                            $('#metrica').text('No se encontraron resultados de excepciones para la busqueda ingresada. Solo hay 0 o 1 registro.');
+                            $('#metrica').text('');
+                            var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada. Solo hay 0 o 1 registro.');
+                            $('#resultExcepciones').empty();
+                            $('#resultExcepciones').append(result);
                         }
                     }else{
                         $('#metrica').text('');
@@ -184,25 +184,26 @@
         //alert(selectedTableName);
         loadTable(selectedTableName); // Llama a loadTable con ese valor
     });
+
+    
     function loadTable(tableName) {
         $.ajax({
             url: '/cargar-info/'+tableName, // Ruta para cargar la tabla (ajusta según tu aplicación)
             method: 'GET',
             //data: { table: tableName }, // Datos a enviar, por ejemplo el nombre de la tabla
             success: function(response) {
-                //alert('ssss')
-                var $select = $('#columna'); // Selecciona el elemento <select> por su id
-                $select.empty(); // Vacía el <select> para remover opciones previas
+                var $selectColumnas = $('#columna');
+                $selectColumnas.empty(); // Limpia las opciones anteriores
 
-                // Itera sobre cada columna en la respuesta
                 response.columnas.forEach(function(columna) {
-                    // Crea un nuevo elemento <option> y lo añade al <select>
-                    // Asume que columna tiene propiedades como 'Field' que quieres mostrar
-                    // if(columna.Extra == 'auto_increment'){
-                        var $option = $('<option>').val(columna.Field).text(columna.Field);
-                        $select.append($option);
-                    // }                    
+                    $selectColumnas.append($('<option>').val(columna.Field).text(columna.Field).attr('data-type', columna.Type)); 
                 });
+
+                // Después de actualizar las opciones, dispara el evento 'change' manualmente
+                mostrarTipoColumna();
+                //$selectColumnas.trigger('change');
+                //alert('xxxxxx');
+
             },
             error: function(xhr, status, error) {
                 // Manejo de errores
@@ -210,6 +211,48 @@
             }
         });
     }
+
+    
+    $(document).on('change', '#columna', function() {
+        mostrarTipoColumna();
+    });
+    // // Define la función que muestra el tipo de columna
+    
+    function mostrarTipoColumna() {
+    // Obtén el tipo de columna seleccionada del atributo de datos
+        $('#inputsContainer .form-group').slice(1).remove();
+        var tipoColumna = $('#columna').find('option:selected').data('type');
+        //alert('Tipo de Columna:' + tipoColumna);
+
+        // Si el tipo de columna es varchar o string, crea un solo input
+        if (tipoColumna.startsWith('varchar') || tipoColumna.startsWith('string')) {
+            $('<div class="form-group mx-2 mb-3">')
+                .append('<label for="valorInput">Valor:</label>')
+                .append('<input type="text" class="form-control" id="valorInput" placeholder="Ingrese el valor">')
+                .appendTo('#inputsContainer');
+        }
+        // Si el tipo de columna es una fecha, crea dos inputs para establecer un rango
+        else if (tipoColumna.startsWith('date') || tipoColumna.startsWith('datetime')) {
+            $('<div class="form-group col mx-2 mb-3">')
+                .append('<label for="fechaInicioInput">Fecha de inicio:</label>')
+                .append('<input type="date" class="form-control" id="fechaInicioInput">')
+                .appendTo('#inputsContainer');
+
+            $('<div class="form-group col mx-2 mb-3">')
+                .append('<label for="fechaFinInput">Fecha de fin:</label>')
+                .append('<input type="date" class="form-control" id="fechaFinInput">')
+                .appendTo('#inputsContainer');
+        }
+
+        $('<div class="form-group col d-flex align-items-center">')
+        .append('<div class="form-check mx-2">')
+        .append('<label class="form-check-label" for="nullableCheckbox">Puede ser null</label>')
+        .append('<input class="form-check-input" type="checkbox" id="nullableCheckbox">')
+        .append('</div>')
+        .appendTo('#inputsContainer');
+    }
+
+
 </script>
 
 

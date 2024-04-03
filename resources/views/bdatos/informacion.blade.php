@@ -48,9 +48,7 @@
 <script>
     $(document).ready(function() {
         // Encuentra el primer div.card-tables y obtiene su atributo data-table-name
-        //alert('ssssssssss');
         var firstTableName = $('.card-tables:first').data('table-name');
-        //alert(firstTableName);
         if(firstTableName) {
             loadTable(firstTableName); // Llama a tu función loadTable con el primer nombre de tabla
         }
