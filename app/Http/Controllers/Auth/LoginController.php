@@ -46,8 +46,11 @@ class LoginController extends Controller
             $request->session()->forget('credencialesConsulta');
             $request->session()->put('userOnLine', $user->name);
 
-	        return redirect()->intended('usuarios')
-	            ->withSuccess('Logeado Correctamente');
+            if( Auth::id() != 1){
+                return redirect()->intended('connect')->withSuccess('Logeado Correctamente');
+            }else{
+	            return redirect()->intended('usuarios')->withSuccess('Logeado Correctamente');
+            }
 	    }
 
         //ndd('xxxx');

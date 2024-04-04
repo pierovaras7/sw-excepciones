@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Validator;
 
 class UsersController extends Controller
 {
@@ -24,18 +25,23 @@ class UsersController extends Controller
     // Método para almacenar un nuevo usuario en la base de datos
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required:unique:users,email',
-            'password' => 'required'
-            // Agrega aquí otras reglas de validación según tus necesidades
-        ], [
-            '*' => 'Error al crear usuario.'
-        ]);
+        
+
+    
 
 
         // Intenta crear el usuario
         try {
+
+            $request->validate([
+                'name' => 'required',
+                'email' => 'required|unique:users,email',
+                'password' => 'required'
+                // Agrega aquí otras reglas de validación según tus necesidades
+            ], [
+                'email.unique' => 'Email ya registrado en el sistema.'
+            ]);
+
             User::create($request->all());
             return redirect()->route('usuarios.index')
                 ->with('result', 'success')
@@ -43,7 +49,7 @@ class UsersController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('usuarios.index')
                 ->with('result', 'danger')
-                ->with('message', 'Error al registrar el usuario.');
+                ->with('message', 'Email ya registrado en el sistema.');
         }
     }
 

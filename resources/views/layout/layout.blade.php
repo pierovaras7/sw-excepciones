@@ -8,7 +8,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>SB Admin 2 - Blank</title>
+    <title>Manejo de Excepciones</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -42,16 +42,18 @@
             <hr class="sidebar-divider my-0">
 
             <!-- Nav Item - Dashboard -->
-            <li class="nav-item">
-                <a class="nav-link" href="{{route('conexion')}}">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Conexion</span></a>
-            </li>
+            @if(request()->session()->get('userOnLine') != 'admin')
+                <li class="nav-item">
+                    <a class="nav-link" href="{{route('conexion')}}">
+                        <i class="fas fa-fw fa-tachometer-alt"></i>
+                        <span>Conexion</span></a>
+                </li>
+            @endif
             @if(request()->session()->get('conexion') === true)
                 <li class="nav-item">
                     <a class="nav-link" href="{{route('registros')}}">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <span>Integridad por Registros</span></a>
+                        <span>Secuencialidad de Registros</span></a>
                 </li>
 
                 <li class="nav-item">
@@ -72,6 +74,15 @@
                         <span>Scripts en SQL</span></a>
                 </li>
             @endif
+            <!-- Divider -->
+            @if(request()->session()->get('userOnLine') == 'admin')
+                <li class="nav-item">
+                    <a class="nav-link" href="{{route('usuarios.index')}}">
+                        <i class="fas fa-id-badge"></i>
+                        <span>Usuarios del sistema</span></a>
+                </li>
+            @endif
+
         </ul>
         <!-- End of Sidebar -->
 

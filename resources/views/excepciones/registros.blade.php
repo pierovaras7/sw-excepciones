@@ -14,7 +14,7 @@
                     <div class="form-group col">
                         <label for="excepcion">Tipo de Excepcion:</label>
                         <select id="excepcion" name="excepcion" class="form-control" required>
-                            <option selected value="unicidad">Unicidad</option>
+                            <!-- <option selected value="unicidad">Unicidad</option> -->
                             <option value="secuencia">Secuencia</option>
                         </select>
                     </div>

@@ -48,7 +48,7 @@
                             </div>
                             <div class="modal-footer"> 
                                 <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
-                                <button class="btn btn-primary" type="submit">Editar</button>
+                                <button class="btn btn-primary" type="submit">Registrar</button>
                             </div>
                         </form>
                     </div>
@@ -130,31 +130,33 @@
                                     </a>
                                     <div class="modal fade" id="historialModal{{$u->id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
                                         aria-hiddzen="true">
-                                        <div class="modal-dialog modal-dialog-scrollable" role="document">
+                                        <div class="modal-dialog modal-dialog-scrollable">
                                             <div class="modal-content">
-                                                <div class="card shadow">
-                                                    <div class="card-body">
-                                                        <h4 class="mb-2 text-gray-800"><b>Historial del usuario: {{$u->name}}</h4>
-                                                        @if ($u->loginHistories->isNotEmpty())
-                                                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>Hora de Inicio:</th>
-                                                                        <th>Hora de Salida:</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                        @foreach ($u->loginHistories->sortByDesc('login_at') as $loginHistory)
+                                                <div class="modal-body">
+                                                    <div class="card shadow">
+                                                        <div class="card-body">
+                                                            <h4 class="mb-2 text-gray-800"><b>Historial del usuario: {{$u->name}}</h4>
+                                                            @if ($u->loginHistories->isNotEmpty())
+                                                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                                                    <thead>
                                                                         <tr>
-                                                                            <th>{{ $loginHistory->login_at }}</th>
-                                                                            <th>{{ $loginHistory->logout_at }}</th>
+                                                                            <th>Hora de Inicio:</th>
+                                                                            <th>Hora de Salida:</th>
                                                                         </tr>
-                                                                        @endforeach
-                                                                </tbody>
-                                                            </table>
-                                                        @else
-                                                             No hay registros de inicio de sesión
-                                                        @endif
+                                                                    </thead>
+                                                                    <tbody>
+                                                                            @foreach ($u->loginHistories->sortByDesc('login_at') as $loginHistory)
+                                                                            <tr>
+                                                                                <th>{{ $loginHistory->login_at }}</th>
+                                                                                <th>{{ $loginHistory->logout_at }}</th>
+                                                                            </tr>
+                                                                            @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            @else
+                                                                No hay registros de inicio de sesión
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

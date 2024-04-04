@@ -238,12 +238,31 @@ class DatabaseController extends Controller
                 if($dbType == 'mysql'){
                     $nombresColumnas = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tabla);
                 }else if($dbType == 'sqlsrv'){
-                    $nombresColumnas = DB::connection('consulta')->select("SELECT COLUMN_NAME AS 'Field', DATA_TYPE AS 'Type', IS_NULLABLE AS 'Null', COALESCE(COLUMN_DEFAULT, ' ') AS 'Default'
-                    FROM INFORMATION_SCHEMA.COLUMNS
-                    WHERE TABLE_NAME = '$tabla'");        
+                    $nombresColumnas = DB::connection('consulta')->select("SELECT 
+                    c.name AS 'Field',
+                    t.name AS 'Type',
+                    CASE 
+                        WHEN c.is_identity = 1 THEN 'auto_increment'
+                        ELSE 'NO'
+                    END AS 'Extra',
+                    COALESCE(sc.definition, ' ') AS 'Default',
+                    CASE 
+                        WHEN c.is_nullable = 1 THEN 'YES'
+                        ELSE 'NO'
+                    END AS 'Null'
+                    FROM 
+                        sys.columns c
+                    INNER JOIN 
+                        sys.types t ON c.user_type_id = t.user_type_id
+                    LEFT JOIN 
+                        sys.default_constraints sc ON c.default_object_id = sc.object_id
+                    WHERE 
+                        c.object_id = OBJECT_ID('$tabla');" 
+                    );        
                 }
                 //$nombresColumnas = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tabla);
                 $registros = DB::connection('consulta')->select('SELECT * FROM ' . $tabla);
+                //dd($registros);
                 $total = DB::connection('consulta')->table($tabla)->count();
 
                 //dd($registros);
@@ -263,63 +282,41 @@ class DatabaseController extends Controller
                 }
 
                 if($excepcion == 'secuencia'){
-                    $resultados = DB::connection('consulta')->select("
-                        WITH RECURSIVE num_series AS (
-                        SELECT MIN($columna) AS start_id, MAX($columna) AS end_id FROM $tabla
-                        UNION ALL
-                        SELECT start_id + 1, end_id FROM num_series WHERE start_id < end_id
-                        )
-                        SELECT CONCAT('Falta el registro con ID ', ns.start_id) AS message
-                        FROM num_series ns
-                        LEFT JOIN $tabla tt ON ns.start_id = tt.$columna
-                        WHERE tt.$columna IS NULL
-                        ORDER BY ns.start_id;
-                    ");
+                    if($dbType == 'mysql'){
+                        // Para MySQL
+                        $resultados = DB::connection('consulta')->select("
+                            WITH RECURSIVE num_series AS (
+                            SELECT MIN($columna) AS start_id, MAX($columna) AS end_id FROM $tabla
+                            UNION ALL
+                            SELECT start_id + 1, end_id FROM num_series WHERE start_id < end_id
+                            )
+                            SELECT CONCAT('Falta el registro con ID ', ns.start_id) AS message
+                            FROM num_series ns
+                            LEFT JOIN $tabla tt ON ns.start_id = tt.$columna
+                            WHERE tt.$columna IS NULL
+                            ORDER BY ns.start_id;
+                        ");
+                    }else if($dbType == 'sqlsrv'){
+                        // Para SQLServer
+                        $resultados =  DB::connection('consulta')->select("
+                            DECLARE @max_number INT;
+                            SELECT @max_number = MAX($columna) FROM $tabla;
+                            WITH NumbersCTE AS (
+                                SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+                                FROM sys.columns AS c1
+                                CROSS JOIN sys.columns AS c2
+                            )
+                            SELECT CONCAT('Falta el registro con ID ', n) AS message
+                            FROM NumbersCTE
+                            WHERE n <= @max_number
+                            AND n NOT IN (SELECT $columna FROM $tabla)
+                            ORDER BY n;
+                        ");
+                    }
                     return response()->json(['message' => 'Recibiendo resultados de la excepcion...','results' => $resultados,'total' => $total,'columnas' => $nombresColumnas,
                     'datos' => $registros,'exception'=>'Secuencia']);
                 }else {
-                    // Obtener los nombres de las columnas de la tabla
                     
-                    $primaryKeyColumns = DB::connection('consulta')->select("
-                        SELECT COLUMN_NAME
-                        FROM information_schema.KEY_COLUMN_USAGE
-                        WHERE TABLE_NAME = ? AND CONSTRAINT_NAME = 'PRIMARY'
-                    ", [$tabla]);
-
-                    // Inicializar un arreglo para almacenar los nombres de las columnas de la clave primaria
-                    $primaryKeyColumnNames = [];
-
-                    foreach ($primaryKeyColumns as $column) {
-                        $primaryKeyColumnNames[] = $column->COLUMN_NAME;
-                    }
-
-                    // Ahora $primaryKeyColumnNames contiene los nombres de todas las columnas de la clave primaria
-                    // Puedes usar dd() para volcar y morir la variable para inspeccionarla
-                    dd($primaryKeyColumnNames);
-                    // $primaryKeyColumn = DB::connection('consulta')->select("
-                    //     SELECT COLUMN_NAME
-                    //     FROM information_schema.KEY_COLUMN_USAGE
-                    //     WHERE TABLE_NAME = ? AND CONSTRAINT_NAME = 'PRIMARY'
-                    // ", [ $tabla]);
-
-
-                    // dd($primaryKeyColumn[0]->COLUMN_NAME);
-                    // Construir la parte de la consulta que especifica las columnas a agrupar
-                    $groupedByColumns = implode(", ", $columns);
-                    //dd($groupedByColumns);
-                    // Construir y ejecutar la consulta
-                    $query = "SELECT $groupedByColumns, COUNT(*) as repetitions
-                              FROM $tabla
-                              GROUP BY $groupedByColumns
-                              HAVING COUNT(*) > 1";
-                    $resultados = DB::connection('consulta')->select($query);
-                    
-                    // Devolver los resultados
-                    // if (count($resultados) > 0) {
-                    //     return response()->json(['message' => 'Se encontraron registros duplicados.', 'results' => $resultados]);
-                    // } else {
-                    //     return response()->json(['message' => 'Todos los registros son únicos.']);
-                    // }
                 }
                 
             //return response()->json(['message' => 'sss']);

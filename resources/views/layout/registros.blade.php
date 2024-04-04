@@ -1,9 +1,9 @@
 @extends('layout.layout')
 
 @section('contenido')
-    <h1 class="h3 mb-2 text-gray-800">Conexion:</h1>
+    <h1 class="h3 mb-2 text-gray-800">Secuencialidad de Registros:</h1>
     <p class="mb-4">
-        Ingresar credenciales para conectarse a la base de datos
+        Verificar columnas y confirmar su secuencialidad y coherencia.
     </p>
     <div class="row">
         <div class="m-1 col-12">
@@ -14,7 +14,7 @@
                     <div class="form-group col">
                         <label for="excepcion">Tipo de Excepcion:</label>
                         <select id="excepcion" name="excepcion" class="form-control" required>
-                            <option selected value="unicidad">Unicidad</option>
+                            <!-- <option selected value="unicidad">Unicidad</option> -->
                             <option value="secuencia">Secuencia</option>
                         </select>
                     </div>
@@ -136,8 +136,10 @@
                                     var alertDiv = $('<div>').addClass('row alert alert-danger m-1 p-1').attr('role', 'alert');
                                     // Crear el div para la imagen
                                     var imgDiv = $('<div>').addClass('col-1').append($('<img>').attr('src', 'img/buscar.png').attr('alt', 'Icon Excepciones'));
+                                    //var imgDiv =  $('<div>').addClass('text-center').html('<i class="fa fa-exclamation-circle" aria-hidden="true"></i>');
                                     // Crear el div para el mensaje, usando 'd-flex' y 'align-items-center' para el centrado vertical
                                     var messageDiv = $('<div>').addClass('col-11 d-flex flex-column align-items-center');
+                        
                                     var messagePart1 = $('<div>').html('<u>Excepción de secuencialidad encontrada</u>');
                                     var messagePart2 = $('<div>').text(result.message);
                                     
@@ -151,6 +153,10 @@
                                 var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada.');
                                 $('#resultExcepciones').empty();
                                 $('#resultExcepciones').append(result);
+
+                                setTimeout(function() {
+                                $('#resultExcepciones').empty();
+                            }, 4000);
                             }
                         }
                         else{
@@ -158,6 +164,10 @@
                             var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada. Solo hay 0 o 1 registro.');
                             $('#resultExcepciones').empty();
                             $('#resultExcepciones').append(result);
+
+                            setTimeout(function() {
+                                $('#resultExcepciones').empty();
+                            }, 4000);
                         }
                     }else{
                         $('#metrica').text('');
@@ -170,6 +180,10 @@
                         }
                         $('#resultExcepciones').empty();
                         $('#resultExcepciones').append(noResult);
+
+                        setTimeout(function() {
+                                $('#resultExcepciones').empty();
+                            }, 4000);
                     }
                 },
                 error: function(xhr, status, error) {
