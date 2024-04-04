@@ -1,9 +1,9 @@
 @extends('layout.layout')
 
 @section('contenido')
-    <h1 class="h3 mb-2 text-gray-800">Conexion:</h1>
+    <h1 class="h3 mb-2 text-gray-800">Integridad de campos:</h1>
     <p class="mb-4">
-        Ingresar credenciales para conectarse a la base de datos
+        Analizar los valores de la base de datos para el campo elegido de cierta tabla.
     </p>
     <div class="row">
         <div class="m-1 col-12">
@@ -25,17 +25,19 @@
                         </select>
                     </div>
                 </div>
-                <div class="row px-2" id="inputsContainer">
-                    <div class="form-group col text-center d-flex align-items-center">
-                        <p>Condiciones: </p>
+                <div class="row">
+                    <div class="form-group col-2 d-flex align-items-center">
+                        <p class="px-2">Parametros aceptados: </p>
+                    </div>
+                    <div class="form-group col-10">
+                        <div class="row" id="inputsContainer">
+                        </div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="form-group col text-center" id="btnsFormConexion">
                         <button id="btnConectar" type="submit" class="btn btn-primary">Verificar</button>
                     </div>
-                </div>
-                <div class="row" id="divColumnas">
                 </div>
             </form>
         </div>
@@ -220,19 +222,32 @@
     
     function mostrarTipoColumna() {
     // Obtén el tipo de columna seleccionada del atributo de datos
-        $('#inputsContainer .form-group').slice(1).remove();
+        $('#inputsContainer').empty();
         var tipoColumna = $('#columna').find('option:selected').data('type');
         //alert('Tipo de Columna:' + tipoColumna);
 
-        // Si el tipo de columna es varchar o string, crea un solo input
-        if (tipoColumna.startsWith('varchar') || tipoColumna.startsWith('string')) {
-            $('<div class="form-group mx-2 mb-3">')
-                .append('<label for="valorInput">Valor:</label>')
-                .append('<input type="text" class="form-control" id="valorInput" placeholder="Ingrese el valor">')
+        const tiposFecha = ['date', 'datetime', 'timestamp', 'time', 'year', 'datetime2', 'smalldatetime', 'datetimeoffset'];
+
+        const tiposStrings = ['varchar', 'text', 'enum', 'set', 'nvarchar', 'nchar', 'ntext'];
+
+        // Ejemplo de uso para verificar si un tipo de columna es una cadena en MySQL o SQL Server
+        if(tipoColumna == 'char(1)'){
+            $('<div class="form-group col mx-2 mb-3">')
+                .append('<label for="valoresInput">Valores aceptados:</label>')
+                .append('<input type="text" class="form-control" name="valoresInput" id="valoresInput" placeholder="Ingrese los valores">')
                 .appendTo('#inputsContainer');
         }
-        // Si el tipo de columna es una fecha, crea dos inputs para establecer un rango
-        else if (tipoColumna.startsWith('date') || tipoColumna.startsWith('datetime')) {
+        if (tiposStrings.some(tipo => tipoColumna.toLowerCase().includes(tipo))) {
+            // Crea un solo input para manejar la cadena
+            $('<div class="form-group col mx-2 mb-3">')
+                .append('<label for="valorInput">Valor aceptado:</label>')
+                .append('<input type="text" class="form-control" name="valorInput" id="valorInput" placeholder="Ingrese el valor">')
+                .appendTo('#inputsContainer');
+        }
+
+        // Ejemplo de uso para verificar si un tipo de columna es una cadena en SQL Server
+        if (tiposFecha.some(tipo => tipoColumna.toLowerCase().includes(tipo))) {
+            // Crea un solo input para manejar la cadena
             $('<div class="form-group col mx-2 mb-3">')
                 .append('<label for="fechaInicioInput">Fecha de inicio:</label>')
                 .append('<input type="date" class="form-control" id="fechaInicioInput">')
@@ -244,15 +259,11 @@
                 .appendTo('#inputsContainer');
         }
 
-        $('<div class="form-group col d-flex align-items-center">')
-        .append('<div class="form-check mx-2">')
-        .append('<label class="form-check-label" for="nullableCheckbox">Puede ser null</label>')
-        .append('<input class="form-check-input" type="checkbox" id="nullableCheckbox">')
-        .append('</div>')
+        $('<div class="form-check col-2 d-flex align-items-center">')
+        .append('<input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">')
+        .append('<label class="form-check-label" for="flexCheckDefault">Es null</label>')
         .appendTo('#inputsContainer');
     }
-
-
 </script>
 
 

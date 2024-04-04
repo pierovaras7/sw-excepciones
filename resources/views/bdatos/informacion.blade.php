@@ -45,10 +45,12 @@
             </div>
         </div>
 @endsection
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
     $(document).ready(function() {
         // Encuentra el primer div.card-tables y obtiene su atributo data-table-name
         var firstTableName = $('.card-tables:first').data('table-name');
+        //alert(firstTableName);
         if(firstTableName) {
             loadTable(firstTableName); // Llama a tu función loadTable con el primer nombre de tabla
         }
@@ -69,7 +71,7 @@
             },
             error: function(xhr, status, error) {
                 // Manejo de errores
-                alert(error.message); // Esto te mostrará la estructura de la respuesta en la consola
+                //alert(error.message); // Esto te mostrará la estructura de la respuesta en la consola
             }
         });
     }

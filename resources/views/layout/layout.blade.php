@@ -47,39 +47,31 @@
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Conexion</span></a>
             </li>
+            @if(request()->session()->get('conexion') === true)
+                <li class="nav-item">
+                    <a class="nav-link" href="{{route('registros')}}">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Integridad por Registros</span></a>
+                </li>
 
-            <li class="nav-item">
-                <a class="nav-link" href="{{route('registros')}}">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>Integridad por Registros</span></a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{route('campos')}}">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Integridad por Campos</span></a>
+                </li>
 
-            <li class="nav-item">
-                <a class="nav-link" href="{{route('campos')}}">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>Integridad por Campos</span></a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Integridad por Tabla</span></a>
+                </li>
 
-            <li class="nav-item">
-                <a class="nav-link" href="index.html">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>Integridad por Tabla</span></a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="index.html">
-                    <i class="fas fa-file-code"></i>
-                    <span>Scripts en SQL</span></a>
-            </li>
-            
-            <!-- Divider -->
-            <li class="nav-item">
-                <a class="nav-link" href="index.html">
-                    <i class="fas fa-id-badge"></i>
-                    <span>Opciones</span></a>
-            </li>
-            
-
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">
+                        <i class="fas fa-file-code"></i>
+                        <span>Scripts en SQL</span></a>
+                </li>
+            @endif
         </ul>
         <!-- End of Sidebar -->
 
@@ -261,7 +253,7 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Piero</span>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{request()->session()->get('userOnLine')}}</span>
                                 <img class="img-profile rounded-circle"
                                     src="img/undraw_profile.svg">
                             </a>

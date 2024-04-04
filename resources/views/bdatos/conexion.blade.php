@@ -8,37 +8,42 @@
     <div class="row">
         <div class="m-1 col-12">
             <form action="{{ route('connect') }}" method="post" id="connectForm">
-            @csrf
-            <!-- Campos para las credenciales de conexión -->
-                <div class="form-group">
-                    <label for="db_type">Gestor Base de Datos:</label>
-                    <select name="db_type" class="form-control" required>
-                        <option value="mysql">MySQL</option>
-                        <option value="sqlsrv">SQL Server</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="host">Host:</label>
-                    <input type="text" name="host" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="database">Base de Datos:</label>
-                    <input type="text" name="database" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="username">Usuario:</label>
-                    <input type="text" name="username" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Contraseña:</label>
-                    <input type="password" name="password" class="form-control">
-                </div>
-                <div class="form-group text-center" id="btnsFormConexion">
-                    <button id="btnConectar" type="button" class="btn btn-primary">Conectar</button>
-                    <!-- Si $conex es true, el botón "Desconectar" estará oculto -->
-                    <button id="btnDesconectar" type="button" class="btn btn-primary">Desconectar</button>
+                @csrf
+                <!-- Campos para las credenciales de conexión -->
+                <div class="row">
+                    <div class="form-group col-6">
+                        <label for="db_type">Gestor Base de Datos:</label>
+                        <select name="db_type" class="form-control" required>
+                            <option value="mysql" {{ request()->session()->get('conexion') && request()->session()->get('credencialesConsulta')['db_type'] == 'mysql' ? 'selected' : '' }}>MySQL</option>
+                            <option value="sqlsrv" {{ request()->session()->get('conexion') && request()->session()->get('credencialesConsulta')['db_type'] == 'sqlsrv' ? 'selected' : '' }}>SQL Server</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="host">Host:</label>
+                        <input type="text" name="host" class="form-control" required value="{{ request()->session()->get('conexion') ? request()->session()->get('credencialesConsulta')['host'] : '' }}">                    
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="port">Puerto:</label>
+                        <input type="text" name="port" class="form-control" required value="{{ request()->session()->get('conexion') ? request()->session()->get('credencialesConsulta')['port'] : '' }}"> 
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="database">Base de Datos:</label>
+                        <input type="text" name="database" class="form-control" required value="{{ request()->session()->get('conexion') ? request()->session()->get('credencialesConsulta')['database'] : '' }}">                    
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="username">Usuario:</label>
+                        <input type="text" name="username" class="form-control" required value="{{ request()->session()->get('conexion') ? request()->session()->get('credencialesConsulta')['username'] : '' }}">      </div>
+                    <div class="form-group col-6">
+                        <label for="password">Contraseña:</label>
+                        <input type="password" name="password" class="form-control" value="{{ request()->session()->get('conexion') ? request()->session()->get('credencialesConsulta')['password'] : '' }}">                    
+                    </div>
+                    <div class="form-group col-12 text-center" id="btnsFormConexion">
+                        <button id="btnConectar" type="button" class="btn btn-primary">Conectar</button>
+                        <!-- Si $conex es true, el botón "Desconectar" estará oculto -->
+                        <button id="btnDesconectar" type="button" class="btn btn-primary">Desconectar</button>
 
-                    <a id="btnInformacion" href="{{route('infodb')}}" class="btn btn-info">Ver Información</a>
+                        <a id="btnInformacion" href="{{route('infodb')}}" class="btn btn-info">Ver Información</a>
+                    </div>
                 </div>
             </form>
         </div>
@@ -127,7 +132,6 @@
                   // Configurar y mostrar el modal de éxito
                   // alert('god');
                   $('.modal-body').html(response.message).removeClass('alert-danger').addClass('alert-success');
-                  $('.modal-footer').html('<a href="{{route('infodb')}}" class="btn btn-info">Ver Información</a>');
                   $('#conexionModal').modal('show');
 
                   $('#connectForm input, #connectForm select').prop('disabled', true);
@@ -136,6 +140,11 @@
                   $('#btnConectar').hide();
                   $('#btnInformacion').show();
                   //$('#btnsFormConexion').html('<button id="btnDesconectar" type="button" class="btn btn-primary">Desconectar</button>');
+
+                  setTimeout(function() {
+                        // Recargar la página
+                        window.location.reload();
+                    }, 3000); // 3000 milisegundos = 3 segundos
 
               },
               error: function(xhr, status, error) {
@@ -153,6 +162,12 @@
           // Aquí puedes realizar las acciones necesarias para la 
           //alert('Desconectar');
           //$('#btnsFormConexion').html('<button id="btnConectar" type="button" class="btn btn-primary">Conectar</button>');
+          $('select[name="db_type"]').val('');
+            $('input[name="host"]').val('');
+            $('input[name="port"]').val('');
+            $('input[name="database"]').val('');
+            $('input[name="username"]').val('');
+            $('input[name="password"]').val('');
 
           $.ajax({
               type: 'GET',
@@ -161,13 +176,17 @@
               success: function(response) {
                   // // Lógica después de cambiar la conexión en la sesión
                    $('.modal-body').html(response.message).removeClass('alert-danger').addClass('alert-success');
-                   $('.modal-footer').html('<a class="btn btn-info" data-dismiss="modal">OK</a>');
                    $('#conexionModal').modal('show');
 
                    $('#connectForm input, #connectForm select').prop('disabled', false);
                    $('#btnDesconectar').hide();
                    $('#btnConectar').show();
                    $('#btnInformacion').hide();
+
+                   setTimeout(function() {
+                        // Recargar la página
+                        window.location.reload();
+                    }, 3000); 
 
               },
               error: function(xhr, status, error) {

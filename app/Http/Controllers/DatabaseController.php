@@ -21,7 +21,7 @@ class DatabaseController extends Controller
         Config::set("database.connections.consulta", [
             'driver' => $credentials['db_type'],
             'host' => $credentials['host'],
-            'port' => '3306', // Puedes ajustar el puerto si es necesario
+            'port' => $credentials['port'], // Puedes ajustar el puerto si es necesario
             'database' => $credentials['database'],
             'username' => $credentials['username'],
             'password' => $credentials['password'] ?? '',
@@ -30,11 +30,12 @@ class DatabaseController extends Controller
 
     public function connect(Request $request){
 
-        $credentials = $request->only('host', 'database', 'username', 'password', 'db_type');
+        $credentials = $request->only('host', 'database','port','username', 'password', 'db_type');
 
         // Instanciar conexiones de la base de datos
         $this->instanciarConexion($credentials);
 
+        //dd($credentials);
         //$configuraciones = Config::get('database.connections');
 
         // Verificar si la conexión 'consulta' está definida en la configuración
@@ -51,6 +52,7 @@ class DatabaseController extends Controller
             ]);
         } catch(QueryException $e) {
             // La conexión 'consulta' no está definida
+           // dd($e);
             return response()->json([
                 'error' => true,
                 'message' => 'No se pudo establecer la conexión. Verifica las credenciales proporcionadas.',
@@ -80,7 +82,12 @@ class DatabaseController extends Controller
 
     public function infodb(Request $request){
         $this->reiniciaConexion($request);
-        $tablas = DB::connection('consulta')->select('SHOW TABLES');
+        $dbType = session()->get('credencialesConsulta')['db_type'];
+        if($dbType == 'mysql'){
+            $tablas = DB::connection('consulta')->select('SHOW TABLES');
+        }else if($dbType == 'sqlsrv'){
+            $tablas = DB::connection('consulta')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
+        }
         // Formatear los resultados
         $listaTablas = [];
         foreach ($tablas as $tabla) {
@@ -94,9 +101,18 @@ class DatabaseController extends Controller
 
     public function loadInfo($tableName,Request $request)
     {
+        $dbType = session()->get('credencialesConsulta')['db_type'];
         try {
             $this->reiniciaConexion($request);
-            $columns = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tableName . '');
+            if($dbType == 'mysql'){
+                $columns = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tableName . '');
+            }else if($dbType == 'sqlsrv'){
+                
+                $columns = DB::connection('consulta')->select("SELECT COLUMN_NAME AS 'Field', DATA_TYPE AS 'Type', IS_NULLABLE AS 'Null', COALESCE(COLUMN_DEFAULT, ' ') AS 'Default'
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = '$tableName'");
+            }
+            //dd($columns);
             return response()->json(['message' => 'Recibiendo informacion de la tabla...','columnas' => $columns]);
             //return response()->json(['message' => 'sss']);
         } catch (\Exception $e) {
@@ -107,13 +123,19 @@ class DatabaseController extends Controller
 
     public function exRegistrosShow(Request $request){
         $this->reiniciaConexion($request);
-        $tablas = DB::connection('consulta')->select('SHOW TABLES');
+        $dbType = session()->get('credencialesConsulta')['db_type'];
+        if($dbType == 'mysql'){
+            $tablas = DB::connection('consulta')->select('SHOW TABLES');
+        }else if($dbType == 'sqlsrv'){
+            $tablas = DB::connection('consulta')->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
+        }
         // Formatear los resultados
         $listaTablas = [];
         foreach ($tablas as $tabla) {
             $nombreTabla = reset($tabla); // Obtener el nombre de la tabla del primer elemento del array
             $listaTablas[] = $nombreTabla;
         }
+
         //dd($listaTablas);
         //return view('layout.registros');
         return view('layout.registros', ['tablas' => $listaTablas]);
@@ -130,7 +152,15 @@ class DatabaseController extends Controller
             
 
                 // Primero, validar si la columna es autoincrementable
-                $nombresColumnas = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tabla);
+                $dbType = session()->get('credencialesConsulta')['db_type'];
+                if($dbType == 'mysql'){
+                    $nombresColumnas = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tabla);
+                }else if($dbType == 'sqlsrv'){
+                    $columns = DB::connection('consulta')->select("SELECT COLUMN_NAME AS 'Field', DATA_TYPE AS 'Type', IS_NULLABLE AS 'Null', COALESCE(COLUMN_DEFAULT, ' ') AS 'Default'
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = '$tableName'");        
+                }
+                //$nombresColumnas = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tabla);
                 $registros = DB::connection('consulta')->table($tabla);
 
                 $isAutoIncrement = false;
@@ -160,6 +190,9 @@ class DatabaseController extends Controller
                         WHERE tt.$columna IS NULL
                         ORDER BY ns.start_id;
                     ");
+                    
+                    
+                    
                     return response()->json(['message' => 'Recibiendo resultados de la excepcion...','results' => $resultados,'columnas' => $nombresColumnas,
                     'datos' => $registros,'exceptions'=>'Secuencia']);
                 }else {
@@ -201,7 +234,15 @@ class DatabaseController extends Controller
             
 
                 // Primero, validar si la columna es autoincrementable
-                $nombresColumnas = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tabla);
+                $dbType = session()->get('credencialesConsulta')['db_type'];
+                if($dbType == 'mysql'){
+                    $nombresColumnas = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tabla);
+                }else if($dbType == 'sqlsrv'){
+                    $nombresColumnas = DB::connection('consulta')->select("SELECT COLUMN_NAME AS 'Field', DATA_TYPE AS 'Type', IS_NULLABLE AS 'Null', COALESCE(COLUMN_DEFAULT, ' ') AS 'Default'
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = '$tabla'");        
+                }
+                //$nombresColumnas = DB::connection('consulta')->select('SHOW COLUMNS FROM ' . $tabla);
                 $registros = DB::connection('consulta')->select('SELECT * FROM ' . $tabla);
                 $total = DB::connection('consulta')->table($tabla)->count();
 

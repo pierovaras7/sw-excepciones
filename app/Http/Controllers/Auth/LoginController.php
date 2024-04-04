@@ -44,6 +44,7 @@ class LoginController extends Controller
 
             $request->session()->forget('conexion');
             $request->session()->forget('credencialesConsulta');
+            $request->session()->put('userOnLine', $user->name);
 
 	        return redirect()->intended('usuarios')
 	            ->withSuccess('Logeado Correctamente');
