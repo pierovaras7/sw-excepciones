@@ -15,7 +15,8 @@
                         <label for="excepcion">Tipo de Excepcion:</label>
                         <select id="excepcion" name="excepcion" class="form-control" required>
                             <!-- <option selected value="unicidad">Unicidad</option> -->
-                            <option value="secuencia">Secuencia</option>
+                            <option selected value="secuencia">Secuencia</option>
+                            <option value="unicidad">Unicidad</option>
                         </select>
                     </div>
                     <div class="form-group col">
@@ -26,9 +27,9 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group col">
+                    <div class="form-group col" id="groupcolumna">
                         <label for="columna">Columna:</label>
-                        <select id="columna" name="columna" class="form-control" required>
+                        <select id="columna" name="columna" class="form-control">
                         </select>
                     </div>
                     <!-- <div class="form-group col-6 col-md-3">
@@ -48,10 +49,18 @@
             <p id="metrica"></p>
         </div>
         <div class="col-12">
-            <div class="my-2 text-center">
-                <button type="button" class="btn btn-primary" id="btnTableModal" disabled data-toggle="modal" data-target="#tableModal">
-                    Ver informacion de registros
-                </button>
+            <div class="my-2 text-center row" id="btnsResult">
+                <div class="col">
+                    <button type="button" class="btn btn-primary" id="btnTableModal" disabled data-toggle="modal" data-target="#tableModal">
+                        Ver informacion de registros
+                    </button>
+                </div>
+                <form  method="POST" class="col" id="formResultados">
+                    @csrf
+                    <!-- Otros campos del formulario -->
+                    
+                </form>
+
                 <div class="modal fade" id="tableModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
                     aria-hiddzen="true">
                     <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
@@ -75,57 +84,54 @@
             </div>
         </div>
     </div>
+    <div id="contReporte">
+    </div>
 @endsection
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
     //alert($('#excepcion').val());
+    var resultadosGlobales = null;
+    // var routeURL = '/reporteRegistro'
     $(document).ready(function() {
+        $('#formResultados').hide();
          // Escucha el evento change en el select de excepción
         if($('#excepcion').val() !== 'secuencia') {
-            $('#columna').closest('.form-group').hide();
+            $('#groupcolumna').hide();
         }
         $('#excepcion').change(function(){
             if($('#excepcion').val() === 'secuencia') {
-                $('#columna').closest('.form-group').show();
+                $('#groupcolumna').show();
             } else {
-                $('#columna').closest('.form-group').hide();
+                $('#groupcolumna').hide();
             }
         });
 
-        
+
+        //
+        // Adjunta la función de clic al botón para generar el reporte
+
+
+
 
         $('#verifyForm').submit(function(event) {
             event.preventDefault(); // Previene el envío predeterminado
-
             // Realiza la petición AJAX
             $.ajax({
                 url: $(this).attr('action'), // Obtiene la URL del atributo 'action' del formulario
                 type: 'POST',
                 data: $(this).serialize(), // Serializa los datos del formulario para el envío,
                 success: function(response) {
-                    // Encuentra el div donde se insertarán los resultados
-                    if(response.datos){
-                            $('#btnTableModal').prop('disabled',false);
-                            $('#tableTittle').html('<b>Registros de la tabla: ' +  $('#tabla').val())+ '</b>';
-                            var encabezados = '';
-                            $.each(response.columnas, function(i, columna) {
-                                encabezados += '<th>' + columna.Field + '</th>';
-                            });
-                            $('#theadDatos').html(encabezados); 
-
-                            var filas = '';
-                            $.each(response.datos, function(i, fila) {
-                                filas += '<tr>';
-                                $.each(response.columnas, function(j, columna) {
-                                    filas += '<td>' + (fila[columna.Field] != null ? fila[columna.Field] : '') + '</td>';
-                                });
-                                filas += '</tr>';
-                            });
-                            $('#tbodyDatos').html(filas); 
-                    }
-                    if(response.results){
-                        if(response.total > 1){
+                    // Mostrar registros de la tabla analizad
+                    if (response.error) {
+                        // Mostrar el mensaje de error en el div errorContainer
+                        //alert(response.message);
+                    } else {
+                        if(response.results){
                             if(response.results.length > 0) {
+                                //
+                                resultadosGlobales = response.results;
+                                //console.log(resultadosGlobales);
+                                //
                                 $('#metrica').addClass('text-center').text(response.results.length +' excepciones encontradas.');
                                 var resultsDiv = $('#resultExcepciones');
                                 // Limpia los resultados anteriores
@@ -139,64 +145,171 @@
                                     //var imgDiv =  $('<div>').addClass('text-center').html('<i class="fa fa-exclamation-circle" aria-hidden="true"></i>');
                                     // Crear el div para el mensaje, usando 'd-flex' y 'align-items-center' para el centrado vertical
                                     var messageDiv = $('<div>').addClass('col-11 d-flex flex-column align-items-center');
-                        
-                                    var messagePart1 = $('<div>').html('<u>Excepción de secuencialidad encontrada</u>');
+                                    if(response.exception == 'Secuencia'){
+                                        var messagePart1 = $('<div>').html('<u>Excepción de secuencialidad encontrada</u>');
+                                    }else{
+                                        var messagePart1 = $('<div>').html('<u>Excepción de unicidad encontrada</u>');
+                                    }
                                     var messagePart2 = $('<div>').text(result.message);
                                     
                                     messageDiv.append(messagePart1).append(messagePart2);
                                     alertDiv.append(imgDiv).append(messageDiv);
 
                                     resultsDiv.append(alertDiv);
+                                    
+                                    
                                 })
+                                    var resultadosJSON = JSON.stringify(resultadosGlobales);
+                                // Construir el formulario dinámicamente
+                                    
+                                    // Agregar un campo oculto para el token CSRF
+                                    $('#formResultados').show();
+                                    console.log(response.exception);
+                                    if(response.exception == 'Secuencia'){
+                                        $('#formResultados').attr('action', '{{ route("reporteS") }}');
+                                    }else{
+                                        $('#formResultados').attr('action', '{{ route("reporteU") }}');
+                                    }; 
+                                    $('#formResultados').empty();
+                                    $('#formResultados').attr('target','_blank');
+                                    $('#formResultados').html('@csrf');
+                                    $('#formResultados').append(
+                                        $('<input>', {
+                                            type: 'hidden',
+                                            name: 'resultados',
+                                            value: resultadosJSON
+                                        }));
+                                    $('#formResultados').append(
+                                        $('<button>', {
+                                            type: 'submit',
+                                            class: 'btn btn-dark',
+                                            text: 'Generar Reporte',
+                                            id : 'btnReporte'
+                                        }));
+                                    // Agregar el formulario al elemento con id #btnsResult
+                                    //$('#btnsResult').append(formulario);
+
+                                    //$('#btnsResult').append(button);
                             }else{
                                 $('#metrica').text('');
-                                var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada.');
+                                var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones.');
                                 $('#resultExcepciones').empty();
                                 $('#resultExcepciones').append(result);
 
                                 setTimeout(function() {
+                                    $('#resultExcepciones').empty();
+                                }, 4000);
+                            }
+                        }else{
+                            if(response.errortipo){
+                                // No hay resultados y hay error
+                                $('#metrica').text('');
+                                var noResult = $('<div>').addClass('alert alert-warning text-center').attr('role', 'alert').text(response.errortipo);
                                 $('#resultExcepciones').empty();
-                            }, 4000);
+                                $('#resultExcepciones').append(noResult);
+
+                                setTimeout(function() {
+                                        $('#resultExcepciones').empty();
+                                }, 4000);
+                            }
+                            if(response.noresult){
+                                // No hay resultados y hay error
+                                $('#metrica').text('');
+                                var noResult = $('<div>').addClass('alert alert-warning text-center').attr('role', 'alert').text(response.noresult);
+                                $('#resultExcepciones').empty();
+                                $('#resultExcepciones').append(noResult);
+
+                                setTimeout(function() {
+                                        $('#resultExcepciones').empty();
+                                }, 4000);
+                            }
+                            
+                        }
+                        if(response.datos){
+                            if(response.datos.length > 0){
+                                //alert('si jhay');
+                                $('#btnTableModal').prop('disabled',false);
+                                $('#tableTittle').html('<b>Registros de la tabla: ' +  $('#tabla').val())+ '</b>';
+                                var encabezados = '';
+                                $.each(response.columnas, function(i, columna) {
+                                    encabezados += '<th>' + columna.Field + '</th>';
+                                });
+                                $('#theadDatos').html(encabezados); 
+                                var filas = '';
+                                $.each(response.results, function(i, fila) {
+                                    filas += '<tr>';
+                                    $.each(response.columnas, function(j, columna) {
+                                        filas += '<td>' + (fila[columna.Field] != null ? fila[columna.Field] : '') + '</td>';
+                                    });
+                                    filas += '</tr>';
+                                });
+                                $('#tbodyDatos').html(filas); 
+                            }
+                            else{
+                                $('#metrica').text('');
+                                var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('La tabla analizada esta vacia.');
+                                $('#resultExcepciones').empty();
+                                $('#resultExcepciones').append(result);
+
+                                setTimeout(function() {
+                                    $('#resultExcepciones').empty();
+                                }, 4000);
                             }
                         }
-                        else{
-                            $('#metrica').text('');
-                            var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada. Solo hay 0 o 1 registro.');
-                            $('#resultExcepciones').empty();
-                            $('#resultExcepciones').append(result);
-
-                            setTimeout(function() {
-                                $('#resultExcepciones').empty();
-                            }, 4000);
-                        }
-                    }else{
-                        $('#metrica').text('');
-                        if(response.exception == 'Secuencia'){
-                            var noResult = $('<div>').addClass('alert alert-warning text-center').attr('role', 'alert').text('El campo elegido no cumple con las condiciones para realizar un analisis de secuencialidad.');
-                            // $('#resultExcepciones').empty();
-                            // $('#resultExcepciones').append(noResult);
-                        }else{
-                            var noResult = $('<div>').addClass('alert alert-warning text-center').attr('role', 'alert').text('No hay resultados?');
-                        }
-                        $('#resultExcepciones').empty();
-                        $('#resultExcepciones').append(noResult);
-
-                        setTimeout(function() {
-                                $('#resultExcepciones').empty();
-                            }, 4000);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error:', error.message);
+                    var mensajeError = "Error desconocido";
+                    if(xhr.responseJSON && xhr.responseJSON.error) {
+                        mensajeError = xhr.responseJSON.error;
+                    } else {
+                        // Si no hay un mensaje de error JSON específico, utiliza el texto de estado del error.
+                        mensajeError = error;
+                    }
+                    $('#metrica').text('');
+                    var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('Error: ' + mensajeError);
+                    $('#resultExcepciones').empty();
+                    $('#resultExcepciones').append(result);
+
+                    setTimeout(function() {
+                        $('#resultExcepciones').empty();
+                    }, 4000);
                 }
             });
         });
+
+
+
     });
 
+    $(document).on('change', '#excepcion', function() {
+        //alert('ssssssssss');
+        var resultsDiv = $('#resultExcepciones');
+        resultsDiv.empty();
+        $('#metrica').text('');
+        var btnVer = $('#btnTableModal');
+        btnVer.prop('disabled', true);
+        $('#formResultados').hide();
+    });
 
+    $(document).on('change', '#columna', function() {
+        //alert('ssssssssss');
+        var resultsDiv = $('#resultExcepciones');
+        resultsDiv.empty();
+        $('#metrica').text('');
+        var btnVer = $('#btnTableModal');
+        btnVer.prop('disabled', true);
+        $('#formResultados').hide();
+    });
 
     $(document).on('change', '#tabla', function() {
         //alert('ssssssssss');
+        var resultsDiv = $('#resultExcepciones');
+        resultsDiv.empty();
+        $('#metrica').text('');
+        var btnVer = $('#btnTableModal');
+        btnVer.prop('disabled', true);
+        $('#btnReporte').remove();
         var selectedTableName = $(this).val(); // Obtiene el valor de la opción seleccionada
         //alert(selectedTableName);
         loadTable(selectedTableName); // Llama a loadTable con ese valor

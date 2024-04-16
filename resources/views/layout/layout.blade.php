@@ -20,6 +20,13 @@
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.css">
+    <!-- Tema CSS (opcional) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/theme/monokai.min.css">
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.js"></script>
+    <!-- Modo SQL -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/mode/sql/sql.min.js"></script>
 </head>
 
 <body id="page-top">
@@ -40,7 +47,6 @@
 
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
-
             <!-- Nav Item - Dashboard -->
             @if(request()->session()->get('userOnLine') != 'admin')
                 <li class="nav-item">
@@ -50,28 +56,34 @@
                 </li>
             @endif
             @if(request()->session()->get('conexion') === true)
-                <li class="nav-item">
+                <li class="nav-item conexactive">
                     <a class="nav-link" href="{{route('registros')}}">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <span>Secuencialidad de Registros</span></a>
+                        <span>Integridad por Registros</span></a>
                 </li>
 
-                <li class="nav-item">
+                <li class="nav-item conexactive">
                     <a class="nav-link" href="{{route('campos')}}">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span>Integridad por Campos</span></a>
                 </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="index.html">
+                <li class="nav-item conexactive">
+                    <a class="nav-link" href="{{route('tablas')}}">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span>Integridad por Tabla</span></a>
                 </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="index.html">
+                <li class="nav-item conexactive">
+                    <a class="nav-link" href="{{route('consultaSQL')}}">
                         <i class="fas fa-file-code"></i>
                         <span>Scripts en SQL</span></a>
+                </li>
+
+                <li class="nav-item conexactive">
+                    <a class="nav-link" href="{{route('historial')}}">
+                        <i class="fas fa-file-code"></i>
+                        <span>Historial</span></a>
                 </li>
             @endif
             <!-- Divider -->

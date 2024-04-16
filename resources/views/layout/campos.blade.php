@@ -7,7 +7,7 @@
     </p>
     <div class="row">
         <div class="m-1 col-12">
-            <form action="{{ route('registrosResult') }}" method="post" id="verifyForm">
+            <form action="{{ route('camposResult') }}" method="post" id="verifyForm">
             @csrf
             <!-- Campos para las credenciales de conexión -->
                 <div class="row">
@@ -25,9 +25,10 @@
                         </select>
                     </div>
                 </div>
+                <input type="text" id="typecolumna" name="typecolumna" hidden>
                 <div class="row">
                     <div class="form-group col-2 d-flex align-items-center">
-                        <p class="px-2">Parametros aceptados: </p>
+                        <p class="px-2">Parametros: </p>
                     </div>
                     <div class="form-group col-10">
                         <div class="row" id="inputsContainer">
@@ -47,10 +48,17 @@
             <p id="metrica"></p>
         </div>
         <div class="col-12">
-            <div class="my-2 text-center">
-                <button type="button" class="btn btn-primary" id="btnTableModal" disabled data-toggle="modal" data-target="#tableModal">
-                    Ver informacion de registros
-                </button>
+            <div class="my-2 text-center row" id="btnsResult">
+                <div class="col">
+                    <button type="button" class="btn btn-primary" id="btnTableModal" disabled data-toggle="modal" data-target="#tableModal">
+                        Ver informacion de registros
+                    </button>
+                </div>
+                <form  method="POST" class="col" id="formResultados">
+                    @csrf
+                    <!-- Otros campos del formulario -->
+                    
+                </form>
                 <div class="modal fade" id="tableModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
                     aria-hiddzen="true">
                     <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
@@ -77,8 +85,10 @@
 @endsection
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-    //alert($('#excepcion').val());
+    var resultadosGlobales = null;
+    // var routeURL = '/reporteRegistro'
     $(document).ready(function() {
+        $('#formResultados').hide();
         //  // Escucha el evento change en el select de excepción
         // if($('#excepcion').val() !== 'secuencia') {
         //     $('#columna').closest('.form-group').hide();
@@ -94,85 +104,125 @@
         
 
         $('#verifyForm').submit(function(event) {
-            event.preventDefault(); // Previene el envío predeterminado
+            // Previene el envío tradicional del formulario
+            event.preventDefault();
 
-            // Realiza la petición AJAX
+            // Obtén los datos del formulario
+            var formData = $(this).serialize();
+
+            //alert(formData);
+            // Envía los datos usando AJAX a tu controlador
             $.ajax({
-                url: $(this).attr('action'), // Obtiene la URL del atributo 'action' del formulario
                 type: 'POST',
-                data: $(this).serialize(), // Serializa los datos del formulario para el envío,
+                url: $(this).attr('action'), // Cambia esto por la URL de tu controlador
+                data: formData,
                 success: function(response) {
-                    // Encuentra el div donde se insertarán los resultados
-                    if(response.datos){
-                            $('#btnTableModal').prop('disabled',false);
-                            $('#tableTittle').html('<b>Registros de la tabla: ' +  $('#tabla').val())+ '</b>';
-                            var encabezados = '';
-                            $.each(response.columnas, function(i, columna) {
-                                encabezados += '<th>' + columna.Field + '</th>';
-                            });
-                            $('#theadDatos').html(encabezados); 
+                    if (response.errortipo) {
+                        var resultsDiv = $('#resultExcepciones');
+                        resultsDiv.empty();
+                        $('#formResultados').hide();
+                        $('#metrica').text('');
+                        var btnVer = $('#btnTableModal');
+                        btnVer.prop('disabled', true);
+                        var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text(response.errortipo);
+                        $('#resultExcepciones').empty();
+                        $('#resultExcepciones').append(result);
 
-                            var filas = '';
-                            $.each(response.datos, function(i, fila) {
-                                filas += '<tr>';
-                                $.each(response.columnas, function(j, columna) {
-                                    filas += '<td>' + (fila[columna.Field] != null ? fila[columna.Field] : '') + '</td>';
+                        setTimeout(function() {
+                            $('#resultExcepciones').empty();
+                        }, 4000);
+                    }else{
+                        if(response.datos){
+                                $('#btnTableModal').prop('disabled',false);
+                                $('#tableTittle').html('<b>Registros de la tabla: ' +  $('#tabla').val())+ '</b>';
+                                var encabezados = '';
+                                $.each(response.columnas, function(i, columna) {
+                                    encabezados += '<th>' + columna.Field + '</th>';
                                 });
-                                filas += '</tr>';
-                            });
-                            $('#tbodyDatos').html(filas); 
-                    }
-                    if(response.results){
-                        if(response.total > 1){
-                            if(response.results.length > 0) {
-                                $('#metrica').addClass('text-center').text(response.results.length +' excepciones encontradas.');
-                                var resultsDiv = $('#resultExcepciones');
-                                // Limpia los resultados anteriores
-                                resultsDiv.empty();
-                                response.results.forEach(function(result) {
+                                $('#theadDatos').html(encabezados); 
 
-                                    // Crear el contenedor principal con las clases 'row' y 'alert alert-danger'
-                                    var alertDiv = $('<div>').addClass('row alert alert-danger m-1 p-1').attr('role', 'alert');
-                                    // Crear el div para la imagen
-                                    var imgDiv = $('<div>').addClass('col-1').append($('<img>').attr('src', 'img/buscar.png').attr('alt', 'Icon Excepciones'));
-                                    // Crear el div para el mensaje, usando 'd-flex' y 'align-items-center' para el centrado vertical
-                                    var messageDiv = $('<div>').addClass('col-11 d-flex flex-column align-items-center');
-                                    var messagePart1 = $('<div>').html('<u>Excepción de secuencialidad encontrada</u>');
-                                    var messagePart2 = $('<div>').text(result.message);
+                                var filas = '';
+                                $.each(response.results, function(i, fila) {
+                                    filas += '<tr>';
+                                    $.each(response.columnas, function(j, columna) {
+                                        filas += '<td>' + (fila[columna.Field] != null ? fila[columna.Field] : '') + '</td>';
+                                    });
+                                    filas += '</tr>';
+                                });
+                                $('#tbodyDatos').html(filas); 
+                        }
+
+                        if(response.results.length > 0) {
+                            $('#metrica').addClass('text-center').text(response.results.length +' excepciones encontradas.');
+                            var resultsDiv = $('#resultExcepciones');
+                            // Limpia los resultados anteriores
+                            resultsDiv.empty();
+                            resultadosGlobales = response.results;
+                            response.results.forEach(function(result) {
+                                // Crear el contenedor principal con las clases 'row' y 'alert alert-danger'
+                                var alertDiv = $('<div>').addClass('row alert alert-danger m-1 p-1').attr('role', 'alert');
+                                // Crear el div para la imagen
+                                var imgDiv = $('<div>').addClass('col-1').append($('<img>').attr('src', 'img/buscar.png').attr('alt', 'Icon Excepciones'));
+                                //var imgDiv =  $('<div>').addClass('text-center').html('<i class="fa fa-exclamation-circle" aria-hidden="true"></i>');
+                                // Crear el div para el mensaje, usando 'd-flex' y 'align-items-center' para el centrado vertical
+                                var messageDiv = $('<div>').addClass('col-11 d-flex flex-column align-items-center');
+                    
+                                var messagePart1 = $('<div>').html('<u>Excepción de campos encontrada</u>');
+                                var messagePart2 = $('<div>').text(result.message);
+                                
+                                messageDiv.append(messagePart1).append(messagePart2);
+                                alertDiv.append(imgDiv).append(messageDiv);
+
+                                resultsDiv.append(alertDiv);
+                            })
+                            var resultadosJSON = JSON.stringify(resultadosGlobales);
+                                // Construir el formulario dinámicamente
                                     
-                                    messageDiv.append(messagePart1).append(messagePart2);
-                                    alertDiv.append(imgDiv).append(messageDiv);
-
-                                    resultsDiv.append(alertDiv);
-                                })
-                            }else{
-                                $('#metrica').text('');
-                                var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada.');
-                                $('#resultExcepciones').empty();
-                                $('#resultExcepciones').append(result);
-                            }
+                                    // Agregar un campo oculto para el token CSRF
+                                    $('#formResultados').show();
+                                    $('#formResultados').attr('action', '{{ route("reporteC") }}');
+                                    $('#formResultados').empty();
+                                    $('#formResultados').attr('target','_blank');
+                                    $('#formResultados').html('@csrf');
+                                    $('#formResultados').append(
+                                        $('<input>', {
+                                            type: 'hidden',
+                                            name: 'resultados',
+                                            value: resultadosJSON
+                                        }));
+                                    $('#formResultados').append(
+                                        $('<button>', {
+                                            type: 'submit',
+                                            class: 'btn btn-dark',
+                                            text: 'Generar Reporte'
+                                        }));
                         }
                         else{
+                            var resultsDiv = $('#resultExcepciones');
+                            resultsDiv.empty();
+                            $('#formResultados').hide();
                             $('#metrica').text('');
-                            var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para la busqueda ingresada. Solo hay 0 o 1 registro.');
+                            var btnVer = $('#btnTableModal');
+                            btnVer.prop('disabled', true);
+                            var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('No se encontraron resultados de excepciones para los parametros ingresados.');
                             $('#resultExcepciones').empty();
                             $('#resultExcepciones').append(result);
+
+                            setTimeout(function() {
+                                $('#resultExcepciones').empty();
+                            }, 4000);
                         }
-                    }else{
-                        $('#metrica').text('');
-                        if(response.exception == 'Secuencia'){
-                            var noResult = $('<div>').addClass('alert alert-warning text-center').attr('role', 'alert').text('El campo elegido no cumple con las condiciones para realizar un analisis de secuencialidad.');
-                            // $('#resultExcepciones').empty();
-                            // $('#resultExcepciones').append(noResult);
-                        }else{
-                            var noResult = $('<div>').addClass('alert alert-warning text-center').attr('role', 'alert').text('No hay resultados?');
-                        }
-                        $('#resultExcepciones').empty();
-                        $('#resultExcepciones').append(noResult);
                     }
+                    //alert(response.results);
                 },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error.message);
+                error: function() {
+                    var resultsDiv = $('#resultExcepciones');
+                    resultsDiv.empty();
+                    $('#formResultados').hide();
+                    $('#metrica').text('');
+                    var btnVer = $('#btnTableModal');
+                    btnVer.prop('disabled', true);
+                    console.log('Hubo un error al enviar los datos');
                 }
             });
         });
@@ -182,6 +232,13 @@
 
     $(document).on('change', '#tabla', function() {
         //alert('ssssssssss');
+        var resultsDiv = $('#resultExcepciones');
+        resultsDiv.empty();
+        $('#formResultados').hide();
+        $('#metrica').text('');
+        var btnVer = $('#btnTableModal');
+        btnVer.prop('disabled', true);
+        
         var selectedTableName = $(this).val(); // Obtiene el valor de la opción seleccionada
         //alert(selectedTableName);
         loadTable(selectedTableName); // Llama a loadTable con ese valor
@@ -200,12 +257,7 @@
                 response.columnas.forEach(function(columna) {
                     $selectColumnas.append($('<option>').val(columna.Field).text(columna.Field).attr('data-type', columna.Type)); 
                 });
-
-                // Después de actualizar las opciones, dispara el evento 'change' manualmente
                 mostrarTipoColumna();
-                //$selectColumnas.trigger('change');
-                //alert('xxxxxx');
-
             },
             error: function(xhr, status, error) {
                 // Manejo de errores
@@ -216,52 +268,101 @@
 
     
     $(document).on('change', '#columna', function() {
+        var resultsDiv = $('#resultExcepciones');
+        resultsDiv.empty();
+        $('#formResultados').hide();
+        $('#metrica').text('');
+        var btnVer = $('#btnTableModal');
+        btnVer.prop('disabled', true);
         mostrarTipoColumna();
     });
     // // Define la función que muestra el tipo de columna
     
     function mostrarTipoColumna() {
     // Obtén el tipo de columna seleccionada del atributo de datos
-        $('#inputsContainer').empty();
         var tipoColumna = $('#columna').find('option:selected').data('type');
-        //alert('Tipo de Columna:' + tipoColumna);
+        $('#typecolumna').val(tipoColumna);
+        //alert('Valor del input oculto:' + $('#typecolumna').val())
+        var nameColumna = $('#columna').find('option:selected').val();
+
+        var tabla = $('#tabla').val();
+
+        //alert(tabla);
+        var query = '';
+
+
+        //alert('Columna:' + nameColumna);
 
         const tiposFecha = ['date', 'datetime', 'timestamp', 'time', 'year', 'datetime2', 'smalldatetime', 'datetimeoffset'];
 
-        const tiposStrings = ['varchar', 'text', 'enum', 'set', 'nvarchar', 'nchar', 'ntext'];
+        const tiposStrings = ['char','tinytext','mediumtext','longtext','text','tinytext','binary','varchar', 'text', 'enum', 'set', 'nvarchar', 'nchar', 'ntext'];
+
+        const tiposNumericos = [ 'int', 'integer', 'smallint', 'mediumint', 'bigint', 'decimal','smallmoney','money' ,'numeric', 'float', 'double', 'real' ];
+
+        const tiposBooleano = [ 'bit','boolean','bool','tinyint'];
 
         // Ejemplo de uso para verificar si un tipo de columna es una cadena en MySQL o SQL Server
-        if(tipoColumna == 'char(1)'){
-            $('<div class="form-group col mx-2 mb-3">')
-                .append('<label for="valoresInput">Valores aceptados:</label>')
-                .append('<input type="text" class="form-control" name="valoresInput" id="valoresInput" placeholder="Ingrese los valores">')
-                .appendTo('#inputsContainer');
-        }
+        // if(tipoColumna == 'char(1)'){
+        //     $('#inputsContainer').empty();
+        //     $('<div class="form-group col mx-2 mb-3">')
+        //         .append('<label for="valoresInput">Valores aceptados:</label>')
+        //         .append('<input type="text" class="form-control" name="valoresInput" id="valoresInput" placeholder="Ingrese los valores">')
+        //         .appendTo('#inputsContainer');
+            
+        // }
+
+        
         if (tiposStrings.some(tipo => tipoColumna.toLowerCase().includes(tipo))) {
             // Crea un solo input para manejar la cadena
+            $('#inputsContainer').empty();
             $('<div class="form-group col mx-2 mb-3">')
                 .append('<label for="valorInput">Valor aceptado:</label>')
-                .append('<input type="text" class="form-control" name="valorInput" id="valorInput" placeholder="Ingrese el valor">')
+                .append('<input type="text" class="form-control" name="stringValue" id="valorInput" placeholder="Ingrese el valor">')
+                .appendTo('#inputsContainer');
+        }
+
+        // Ejemplo de uso para verificar si un tipo de columna es numérica en SQL Server
+        if (tiposNumericos.some(tipo => tipoColumna.toLowerCase().includes(tipo))) {
+            // Crea un input para el valor mínimo del rango numérico
+            $('#inputsContainer').empty();
+            $('<div class="form-group col mx-2 mb-3">')
+                .append('<label for="minValorInput">Valor mínimo:</label>')
+                .append('<input type="number" class="form-control" name="minValue" placeholder="Introduce el valor mínimo">')
+                .appendTo('#inputsContainer');
+
+            // Crea un input para el valor máximo del rango numérico
+            $('<div class="form-group col mx-2 mb-3">')
+                .append('<label for="maxValorInput">Valor máximo:</label>')
+                .append('<input type="number" class="form-control" name="maxValue" placeholder="Introduce el valor máximo">')
                 .appendTo('#inputsContainer');
         }
 
         // Ejemplo de uso para verificar si un tipo de columna es una cadena en SQL Server
         if (tiposFecha.some(tipo => tipoColumna.toLowerCase().includes(tipo))) {
             // Crea un solo input para manejar la cadena
+            $('#inputsContainer').empty();
             $('<div class="form-group col mx-2 mb-3">')
                 .append('<label for="fechaInicioInput">Fecha de inicio:</label>')
-                .append('<input type="date" class="form-control" id="fechaInicioInput">')
+                .append('<input type="date" class="form-control" name="fechaInicioValue">')
                 .appendTo('#inputsContainer');
 
             $('<div class="form-group col mx-2 mb-3">')
                 .append('<label for="fechaFinInput">Fecha de fin:</label>')
-                .append('<input type="date" class="form-control" id="fechaFinInput">')
+                .append('<input type="date" class="form-control" name="fechaFinValue">')
                 .appendTo('#inputsContainer');
         }
 
+        if (tiposBooleano.some(tipo => tipoColumna.toLowerCase().startsWith(tipo))) {
+            $('#inputsContainer').empty();
+            $('<div class="form-check col-2 d-flex align-items-center">')
+            .append('<input class="form-check-input" type="checkbox" value="true" name="boolValue" id="flexCheckDefault">')
+            .append('<label class="form-check-label" for="flexCheckDefault">True</label>')
+            .appendTo('#inputsContainer');
+        }
+
         $('<div class="form-check col-2 d-flex align-items-center">')
-        .append('<input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">')
-        .append('<label class="form-check-label" for="flexCheckDefault">Es null</label>')
+        .append('<input class="form-check-input" type="checkbox" value="NULL" name="isNull" id="flexCheckDefault">')
+        .append('<label class="form-check-label" for="flexCheckDefault">Mostrar valores nulos</label>')
         .appendTo('#inputsContainer');
     }
 </script>
