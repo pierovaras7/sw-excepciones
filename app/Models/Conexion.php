@@ -10,6 +10,6 @@ class Conexion extends Model
     use HasFactory;
 
     protected $fillable = [
-        'db_type', 'host', 'port', 'database', 'username', 'password','last_use'
+        'db_type', 'host', 'port', 'database', 'username', 'password','last_use','user'
     ];
 }

@@ -88,18 +88,10 @@
     var resultadosGlobales = null;
     // var routeURL = '/reporteRegistro'
     $(document).ready(function() {
+        var selectedTableName = $('#tabla').val();
+        loadTable(selectedTableName);
         $('#formResultados').hide();
-        //  // Escucha el evento change en el select de excepción
-        // if($('#excepcion').val() !== 'secuencia') {
-        //     $('#columna').closest('.form-group').hide();
-        // }
-        // $('#excepcion').change(function(){
-        //     if($('#excepcion').val() === 'secuencia') {
-        //         $('#columna').closest('.form-group').show();
-        //     } else {
-        //         $('#columna').closest('.form-group').hide();
-        //     }
-        // });
+
 
         
 
@@ -130,7 +122,7 @@
 
                         setTimeout(function() {
                             $('#resultExcepciones').empty();
-                        }, 4000);
+                        }, 2000);
                     }else{
                         if(response.datos){
                                 $('#btnTableModal').prop('disabled',false);
@@ -142,7 +134,7 @@
                                 $('#theadDatos').html(encabezados); 
 
                                 var filas = '';
-                                $.each(response.results, function(i, fila) {
+                                $.each(response.datos, function(i, fila) {
                                     filas += '<tr>';
                                     $.each(response.columnas, function(j, columna) {
                                         filas += '<td>' + (fila[columna.Field] != null ? fila[columna.Field] : '') + '</td>';
@@ -210,7 +202,7 @@
 
                             setTimeout(function() {
                                 $('#resultExcepciones').empty();
-                            }, 4000);
+                            }, 2000);
                         }
                     }
                     //alert(response.results);
@@ -261,7 +253,7 @@
             },
             error: function(xhr, status, error) {
                 // Manejo de errores
-                alert('error'); // Esto te mostrará la estructura de la respuesta en la consola
+                console.log('error'); // Esto te mostrará la estructura de la respuesta en la consola
             }
         });
     }
@@ -362,7 +354,7 @@
 
         $('<div class="form-check col-2 d-flex align-items-center">')
         .append('<input class="form-check-input" type="checkbox" value="NULL" name="isNull" id="flexCheckDefault">')
-        .append('<label class="form-check-label" for="flexCheckDefault">Mostrar valores nulos</label>')
+        .append('<label class="form-check-label" for="flexCheckDefault">No Nulls</label>')
         .appendTo('#inputsContainer');
     }
 </script>

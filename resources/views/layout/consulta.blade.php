@@ -29,7 +29,7 @@
             <p class="m-2" id="tableTittle"><b>Resultados de la busqueda:</b></p>
             <div id="resultExcepciones">
             </div>
-            <div style="overflow-y: auto !important; max-height: 300px;">
+            <div style="overflow-y: auto !important; max-height: 500px;">
                 <div class="table-responsive align p-2">
                     <table class="table table-bordered text-center m-0 p-0" id="theadInfo" width="100px" cellspacing="0">
                         <thead id="theadDatos">

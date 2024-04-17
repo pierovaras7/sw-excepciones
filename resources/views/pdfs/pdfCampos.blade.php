@@ -26,14 +26,14 @@
         <div class="px-4">
             <strong>ACCION:</strong>
             <ol>
-                <li>Hola</li>
+                <li>Implementa comprobaciones de validación en tu aplicación antes de enviar datos a la base de datos. Esto incluye verificar tipos de datos, rangos de valores, formatos de cadenas, y más.</li>
             </ol>
         </div>
         <div class="p-4">
             <strong>RESULTADO:</strong>
             <ol>
                 @foreach ($resultados as $r)
-                    <li>{{ $r->message }}</li>
+                    <li style="font-size: 10px">{{ $r->message }}</li>
                 @endforeach
             </ol>
         </div>

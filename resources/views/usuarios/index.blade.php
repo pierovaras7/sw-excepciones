@@ -32,17 +32,16 @@
                                     <div class="form-group">
                                         <label for="exampleInputEmail1">Nombre</label>
                                         <input type="text" class="form-control" id="name" 
-                                            name="name">
-                                        
+                                            name="name" required>
                                     </div>
                                     <div class="form-group">
                                         <label>Email</label>
                                         <input type="email" class="form-control"
-                                        id="email" name="email">
+                                        id="email" name="email" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="exampleInputPassword1">Password</label>
-                                        <input type="password" class="form-control" id="password" name="password">
+                                        <input type="password" class="form-control" id="password" name="password" required>
                                     </div>
                                 
                             </div>
@@ -198,4 +197,7 @@
     setTimeout(function() {
         document.getElementById('resultMessage').style.display = 'none';
     }, 3000); // 3000 milisegundos = 3 segundos
+
+
+
 </script>

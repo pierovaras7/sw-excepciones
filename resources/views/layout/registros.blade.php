@@ -1,9 +1,9 @@
 @extends('layout.layout')
 
 @section('contenido')
-    <h1 class="h3 mb-2 text-gray-800">Secuencialidad de Registros:</h1>
+    <h1 class="h3 mb-2 text-gray-800">Excepcion en Registros:</h1>
     <p class="mb-4">
-        Verificar columnas y confirmar su secuencialidad y coherencia.
+        Verificar columnas y confirmar su secuencialidad y unicidad.
     </p>
     <div class="row">
         <div class="m-1 col-12">
@@ -93,6 +93,10 @@
     var resultadosGlobales = null;
     // var routeURL = '/reporteRegistro'
     $(document).ready(function() {
+        var btnVer = $('#btnTableModal');
+        btnVer.prop('disabled', true);
+        var selectedTableName = $('#tabla').val();
+        loadTable(selectedTableName);
         $('#formResultados').hide();
          // Escucha el evento change en el select de excepción
         if($('#excepcion').val() !== 'secuencia') {
@@ -236,7 +240,8 @@
                                 });
                                 $('#theadDatos').html(encabezados); 
                                 var filas = '';
-                                $.each(response.results, function(i, fila) {
+                                $.each(response.datos, function(i, fila) {
+                                    //console.log(fila.idSucursal);
                                     filas += '<tr>';
                                     $.each(response.columnas, function(j, columna) {
                                         filas += '<td>' + (fila[columna.Field] != null ? fila[columna.Field] : '') + '</td>';
@@ -286,16 +291,17 @@
         //alert('ssssssssss');
         var resultsDiv = $('#resultExcepciones');
         resultsDiv.empty();
+        $('#formResultados').hide();
         $('#metrica').text('');
         var btnVer = $('#btnTableModal');
         btnVer.prop('disabled', true);
-        $('#formResultados').hide();
     });
 
     $(document).on('change', '#columna', function() {
         //alert('ssssssssss');
         var resultsDiv = $('#resultExcepciones');
         resultsDiv.empty();
+        $('#formResultados').hide();
         $('#metrica').text('');
         var btnVer = $('#btnTableModal');
         btnVer.prop('disabled', true);
@@ -306,6 +312,7 @@
         //alert('ssssssssss');
         var resultsDiv = $('#resultExcepciones');
         resultsDiv.empty();
+        $('#formResultados').hide();
         $('#metrica').text('');
         var btnVer = $('#btnTableModal');
         btnVer.prop('disabled', true);

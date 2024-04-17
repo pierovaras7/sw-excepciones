@@ -33,7 +33,7 @@
             <strong>RESULTADO:</strong>
             <ol>
                 @foreach ($resultados as $r)
-                    <li>{{ $r->message }}</li>
+                    <li style="font-size: 10px">{{ $r->message }}</li>
                 @endforeach
             </ol>
         </div>

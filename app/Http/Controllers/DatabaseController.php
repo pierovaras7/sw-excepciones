@@ -68,7 +68,7 @@ class DatabaseController extends Controller
         if(!$request->session()->get('credencialesConsulta')){
             $request->session()->put('conexion', false);
         }
-        $conexiones = Conexion::orderBy('last_use', 'desc')->take(5)->get();
+        $conexiones = Conexion::where('user',Auth::id())->orderBy('last_use', 'desc')->take(5)->get();
         return view('bdatos.conexion', ['conex' => $request->session()->get('conexion'),'conexiones' => $conexiones]);
     }
 
@@ -210,16 +210,13 @@ class DatabaseController extends Controller
         $this->reiniciaConexion($request);
         try {
             $registros = DB::connection('consulta')->select($query);
-            if(!$registros){
-                $query = 'No hay excepciones';
-            }
             Historial::create([
                 'conexion' => session()->get('credencialesConsulta')['id'],
                 'user' => Auth::id(),
                 'fecha' => now()->timezone('America/Lima')->toDateTimeString(),
                 'tipo' => 'scriptsql',
                 'tabla' => 'test',
-                'resultado' => $query
+                'resultado' => 'Se obtuvieron ' . count($registros) . '. Bajo la consulta de :' . $query
             ]);
             return response()->json(['message' => $query,'datos' => $registros]);
         } catch (\Exception $e) {
@@ -251,6 +248,7 @@ class DatabaseController extends Controller
                     'port' => $credentials['port'],
                     'database' => $credentials['database'],
                     'username' => $credentials['username'],
+                    'user' => Auth::id(),
                     //'password' => $credentials['password'] ?? ''
                     // No incluir la contraseña como criterio de búsqueda
                 ],
@@ -311,11 +309,8 @@ class DatabaseController extends Controller
             try {
                 $query = $this->querySecuencialidad($dbType,$tabla,$columna);
                 $resultados = DB::connection('consulta')->select($query);
-                
-                if(!$resultados){
-                    $query = 'No hay excepciones';
-                }
 
+                //dd($query);
 
                 Historial::create([
                     'conexion' => session()->get('credencialesConsulta')['id'],
@@ -323,7 +318,7 @@ class DatabaseController extends Controller
                     'fecha' => now()->timezone('America/Lima')->toDateTimeString(),
                     'tipo' => 'secuencialidad',
                     'tabla' => $tabla,
-                    'resultado' => $query
+                    'resultado' => 'Se identificaron ' . count($resultados) . ' excepciones.'
                 ]);
 
                 if(!empty($resultados)){
@@ -364,28 +359,19 @@ class DatabaseController extends Controller
 
                 }
 
-
+                //dd($query);
                 //$query = "SELECT `" . implode("`, `", $columnas) . "`, COUNT(*) AS Existencias FROM `$tabla` GROUP BY `" . implode("`, `", $columnas) . "`";
                 $resultados = DB::connection('consulta')->select($query);
-                //dd($resultados.length);
-
-                // if(!$resultados){
-                //     $query = 'No hay excepciones';
-                // }
                 
-                $hist = Historial::create([
+                
+                Historial::create([
                     'conexion' => session()->get('credencialesConsulta')['id'],
                     'user' => Auth::id(),
                     'fecha' => now()->timezone('America/Lima')->toDateTimeString(),
                     'tipo' => 'unicidad',
                     'tabla' => $tabla,
-                    'resultado' => 'Se encontraron ' . count($resultados) . ' excepciones.'
+                    'resultado' => 'Se identificaron ' . count($resultados) . ' excepciones.'
                 ]);
-
-                // Generar PDF
-                $pdf = PDF::loadView('reporte'.$hist->id, $data);
-                return $pdf->download('reporte_excepciones.pdf');
-
             
                 if(!empty($resultados)){
                     return response()->json(['message' => 'Recibiendo resultados de la excepcion...','results' => $resultados,'total' => $total,'columnas' => $nombresColumnas,
@@ -435,18 +421,31 @@ class DatabaseController extends Controller
             $last = $request->input('fechaFinValue',null);
             $conditionAdded = false;
             if ($first !== null) {
-                $param .= "WHERE " . $column . " < '" . $first . "'";
+                $param .= "WHERE (" . $column . " < '" . $first . "'";
                 $conditionAdded = true;
             }
             if ($last !== null) {
-                $param .= ($conditionAdded ? ' or ' : 'WHERE ') . $column . " < '" . $last . "'";
+                $param .= ($conditionAdded ? ' or ' : 'WHERE (') . $column . " < '" . $last . "')";
+            }else{
+                $param .=')';
             }
            // $param .= ' AND ' . $column . ' IS NOT NULL';
         } else if ($typeMatches($type, $tiposStrings)) {
             $value = $request->input('stringValue',null);
-            if ($value != null) {
-                $param = 'WHERE ' . $column . " != '" . $value . "'";
-            }
+            if($value !== null) {
+                $elements = explode(',', $value);
+                // Inicializar la cadena de búsqueda
+                $searchCondition = ''; 
+                // Iterar sobre cada elemento
+                foreach ($elements as $element) {
+                    $element = trim($element);
+                    if (!empty($element)) {
+                        $searchCondition .= "$column != '$element' AND ";
+                    }
+                }
+                $searchCondition = rtrim($searchCondition, 'AND ');        
+                $param = 'WHERE ' . $searchCondition;
+            };
             //$param .= ' AND ' . $column . ' IS NOT NULL';
         }else if ($typeMatches($type, $tiposNumericos)) {
             // dd('Es numero');
@@ -454,11 +453,13 @@ class DatabaseController extends Controller
             $max = $request->input('maxValue',null);
             $conditionAdded = false;
             if ($min !== null) {
-                $param .= 'WHERE ' . $column . ' < ' . $min;
+                $param .= 'WHERE (' . $column . ' < ' . $min;
                 $conditionAdded = true;
             }
             if ($max !== null) {
-                $param .= ($conditionAdded ? ' or ' : 'WHERE ') . $column . ' > ' . $max;
+                $param .= ($conditionAdded ? ' or ' : 'WHERE (') . $column . ' > ' . $max.')';
+            }else{
+                $param .=')';
             }
            // $param .= ' AND ' . $column . ' IS NOT NULL';
         }else if ($typeMatches($type, $tiposBooleano)) {
@@ -522,7 +523,7 @@ class DatabaseController extends Controller
                 'fecha' => now()->timezone('America/Lima')->toDateTimeString(),
                 'tipo' => 'campos',
                 'tabla' => $tabla,
-                'resultado' => $query
+                'resultado' => 'Se identificaron ' . count($resultados) . ' excepciones.'
                 // 'resultado' => $messagesConcatenados
             ]);
             return response()->json(['message' => 'Recibiendo resultados de la excepcion...','results' => $resultados,'columna' => $column, 'columnas' => $nombresColumnas , 'datos' => $registros]);
@@ -559,7 +560,7 @@ class DatabaseController extends Controller
                 'fecha' => now()->timezone('America/Lima')->toDateTimeString(),
                 'tipo' => 'tablas',
                 'tabla' => $tablao . ',' . $tablad,
-                'resultado' => $query
+                'resultado' => 'Se identificaron ' . count($resultados) . ' excepciones.'
             ]);
             return response()->json(['message' => 'Recibiendo resultados de la excepcion...','results' => $resultados]);
         } catch (\Exception $e) {
@@ -624,7 +625,7 @@ class DatabaseController extends Controller
         if($dbType == 'mysql'){
             $columns = DB::connection('consulta')->select("SELECT DISTINCT COLUMN_NAME as 'Field',COLUMN_TYPE as 'Type',Extra,IS_NULLABLE as 'Null', COLUMN_DEFAULT as 'Default' FROM information_schema.columns WHERE TABLE_NAME = '" . $tableName . "'");
         }else if($dbType == 'sqlsrv'){
-            $columns = DB::connection('consulta')->select("SELECT 
+            $columns = DB::connection('consulta')->select("SELECT DISTINCT
                 ic.COLUMN_NAME AS Field,
                 CONCAT(ic.DATA_TYPE, 
                     CASE 
@@ -663,7 +664,7 @@ class DatabaseController extends Controller
                     AND REFERENCED_TABLE_NAME IS NOT NULL");
         }else{
             $columns = DB::connection('consulta')->select("
-            SELECT
+            SELECT DISTINCT
                 cu.COLUMN_NAME as COLUMNA,
                 ccu.TABLE_NAME as TABLA,
                 ccu.COLUMN_NAME as FORANEA
@@ -725,34 +726,69 @@ class DatabaseController extends Controller
         return $query;
     }
     
-    
     public function queryTablas($dbType, $tablao, $tablad, $columnao, $columnad){
         $query = "";
         if($dbType == 'mysql'){
+            $pk = DB::connection('consulta')->select("SELECT column_name FROM information_schema.key_column_usage WHERE table_name = '" . $tablao . "' AND constraint_name = 'PRIMARY'");
+
+            $pkConcatenated = implode(" + ', ' + ", array_map(function($col) {
+                return "CAST(o.{$col->column_name} AS CHAR)";  // Asegúrate de que 'o' es el alias correcto
+            }, $pk));
+            
+
+            //dd($pkConcatenated);
             // Para MySQL
-            $query = "SELECT 
-                    CASE 
-                        WHEN t2.$columnad IS NULL THEN 
-                            CONCAT('Excepción de integridad. El dato ', t1.$columnao, ' en la columna $columnao no son encontrados en la columna $columnad de la tabla $tablad.')
-                    END AS 'message'
-                    FROM 
-                        $tablao AS t1
-                    LEFT JOIN 
-                        $tablad AS t2 ON t1.$columnao = t2.$columnad
-                    WHERE t2.$columnad IS NULL;";
+            $query = "
+                SELECT
+                    CONCAT('Excepción de integridad. El dato con identificador ', $pkConcatenated, ' en la columna $columnao no son encontrados en la columna $columnad de la tabla $tablad.') AS message
+                FROM $tablao o
+                LEFT JOIN $tablad d ON o.$columnao = d.$columnad
+                WHERE d.$columnad IS NULL;
+            ";
+            
+            //dd($query);
         }else if($dbType == 'sqlsrv'){
             // Para SQLServer
-            $query = "SELECT 
-                    CASE 
-                        WHEN t2.$columnad IS NULL THEN 
-                            'Excepción de integridad. El dato ' + CONVERT(VARCHAR, t1.$columnao) + ' en la columna $columnao no son encontrados en la columna $columnad de la tabla $tablad.'
-                    END AS 'message'
-                    FROM 
-                        $tablao AS t1
-                    LEFT JOIN 
-                        $tablad AS t2 ON t1.$columnao = t2.$columnad
-                    WHERE t2.$columnad IS NULL;";
+         // Sustituye esto por el nombre de tu tabla
+         $pk = DB::connection('consulta')->select("
+                    SELECT COLUMN_NAME 
+                    FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+                    WHERE TABLE_NAME = '$tablao' 
+                    AND CONSTRAINT_NAME IN (
+                        SELECT CONSTRAINT_NAME
+                        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+                        WHERE TABLE_NAME = '$tablao'
+                        AND CONSTRAINT_TYPE = 'PRIMARY KEY'
+                    )
+                ");
+                // $pk = DB::connection('consulta')->select("
+                // SELECT GROUP_CONCAT(COLUMN_NAME SEPARATOR ', ') AS pk_concat
+                // FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+                // WHERE TABLE_SCHEMA = 'nombre_de_tu_base_de_datos' AND TABLE_NAME = '$tablao' 
+                // AND CONSTRAINT_NAME = (SELECT CONSTRAINT_NAME 
+                //                         FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+                //                         WHERE TABLE_NAME = '$tablao' 
+                //                         AND CONSTRAINT_TYPE = 'PRIMARY KEY')
+                // ");
+        
+        $pkConcatenated = implode(", ", array_map(function($col) {
+            return "CAST(o.{$col->COLUMN_NAME} AS CHAR)";
+        }, $pk));
+
+       
+     
+        // $sqlQuery = "SELECT *, CONCAT('En el registro con identificador(es) ', $pkConcatenated, ' presenta una excepción de campo \"" . $column . "\" para los parametros ingresados.') AS message FROM $tabla $param";
+
+            $query="
+                SELECT
+                    'Excepción de integridad. El dato con identificador ' + $pkConcatenated + ' en la columna $columnao no son encontrados en la columna $columnad de la tabla $tablad.' 
+                    as 'message'
+                FROM $tablao o
+                LEFT JOIN $tablad d ON o.$columnao = d.$columnad
+                WHERE d.$columnad IS NULL;
+            ";
         }
+        
         return $query;
     }
     
@@ -777,38 +813,7 @@ class DatabaseController extends Controller
     }
     
 
-    // public function queryTablas($dbType, $tablao, $tablad, $columnao, $columnad){
-    //     if($dbType == 'mysql'){
-    //         // Para MySQL
-    //         $resultados = DB::connection('consulta')->select(
-    //             "SELECT 
-    //             CASE 
-    //                 WHEN t2.$columnad IS NULL THEN 
-    //                     CONCAT('Excepción de integridad. El dato ', t1.$columnao, ' en la columna $columnao no son encontrados en la columna $columnad de la tabla $tablad.')
-    //             END AS 'message'
-    //             FROM 
-    //                 $tablao AS t1
-    //             LEFT JOIN 
-    //                 $tablad AS t2 ON t1.$columnao = t2.$columnad
-    //             WHERE t2.$columnad IS NULL;"
-    //         );
-    //     }else if($dbType == 'sqlsrv'){
-    //         // Para SQLServer
-    //         $resultados =  DB::connection('consulta')->select(
-    //             "SELECT 
-    //             CASE 
-    //                 WHEN t2.$columnad IS NULL THEN 
-    //                     'Excepción de integridad. El dato ' + CONVERT(VARCHAR, t1.$columnao) + ' en la columna $columnao no son encontrados en la columna $columnad de la tabla $tablad.'
-    //             END AS 'message'
-    //             FROM 
-    //                 $tablao AS t1
-    //             LEFT JOIN 
-    //                 $tablad AS t2 ON t1.$columnao = t2.$columnad
-    //             WHERE t2.$columnad IS NULL;"
-    //         );
-    //     }
-    //     return $resultados;
-    // }
+    
     
     
 }

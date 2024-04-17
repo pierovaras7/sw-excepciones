@@ -52,10 +52,7 @@ class LoginController extends Controller
 	            return redirect()->intended('usuarios')->withSuccess('Logeado Correctamente');
             }
 	    }
-
-        //ndd('xxxx');
-        // Autenticación fallida
-        return back()->withErrors(['email' => 'Las credenciales proporcionadas no son válidas.']);
+        return back()->withErrors(['message' => 'Las credenciales proporcionadas no son válidas.']);
     }
 
     public function logout()

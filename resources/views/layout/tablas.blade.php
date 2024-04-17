@@ -124,6 +124,7 @@ var resultadosGlobales = null;
                         }
 
                         if(response.results.length > 0) {
+                            
                             $('#metrica').addClass('text-center').text(response.results.length +' excepciones encontradas.');
                             var resultsDiv = $('#resultExcepciones');
                             resultadosGlobales = response.results;
@@ -138,7 +139,7 @@ var resultadosGlobales = null;
                                 // Crear el div para el mensaje, usando 'd-flex' y 'align-items-center' para el centrado vertical
                                 var messageDiv = $('<div>').addClass('col-11 d-flex flex-column align-items-center');
                     
-                                var messagePart1 = $('<div>').html('<u>Excepción de campos encontrada</u>');
+                                var messagePart1 = $('<div>').html('<u>Excepción de tablas encontrada</u>');
                                 var messagePart2 = $('<div>').text(result.message);
                                 
                                 messageDiv.append(messagePart1).append(messagePart2);
@@ -276,6 +277,7 @@ var resultadosGlobales = null;
         });
 
         $(document).on('change', '#tablao', function() {
+            $('#metrica').text('');
             var resultsDiv = $('#resultExcepciones');
             resultsDiv.empty();
             $('#formResultados').hide();
@@ -300,6 +302,7 @@ var resultadosGlobales = null;
         });
 
         $(document).on('change', '#tablad', function() {
+            $('#metrica').text('');
             var resultsDiv = $('#resultExcepciones');
             resultsDiv.empty();
             $('#metrica').text('');
@@ -362,7 +365,7 @@ var resultadosGlobales = null;
             },
             error: function(xhr, status, error) {
                 // Manejo de errores
-                alert('error'); // Esto te mostrará la estructura de la respuesta en la consola
+                console.log('error'); // Esto te mostrará la estructura de la respuesta en la consola
             }
         });
     }
@@ -382,6 +385,7 @@ var resultadosGlobales = null;
                     $('#columnao').prop('readonly', true);
                     $('#columnad').prop('readonly', true);
                     response.columnas.forEach(function(columna) {
+                        //alert(columna.TABLA);
                         var nuevaOpcion = $('<option>').val(columna.TABLA).text(columna.TABLA);
                         
                         // Si es el primer elemento, establece selected=true

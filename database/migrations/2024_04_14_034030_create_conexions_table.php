@@ -21,6 +21,7 @@ return new class extends Migration
                 $table->string('username');
                 $table->string('password')->nullable();
                 $table->timestamp('last_use')->default(DB::raw('CURRENT_TIMESTAMP'));
+                $table->integer('user');
                 $table->timestamps(false);
             });
         

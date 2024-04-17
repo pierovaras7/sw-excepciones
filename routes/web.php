@@ -55,6 +55,10 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::post('/connect', [DatabaseController::class, 'connect'])->name('connect');
+    Route::get('/', function () {
+        return view('login2');
+    })->name('login');
+    
 
 });
     // // Ruta para procesar la conexión
@@ -69,9 +73,6 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-Route::get('/', function () {
-    return view('login2');
-});
 
 // Route::get('login', function () {
 //     return view('login2');

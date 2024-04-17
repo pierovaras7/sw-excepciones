@@ -6,13 +6,26 @@
     <title>Ingresar al sistema</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
 </head>
 <body>
         <div class="container">
+        @if ($errors->any())
+            <div>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <div id="resultMessage" class="alert alert-warning" role="alert">
+                            {{ $error }}
+                        </div>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
             <div class="max-w-xs">
                 <div>
                     <img src="https://www.shutterstock.com/image-photo/businessman-hands-working-laptop-top-600nw-2309662399.jpg" alt="">
                 </div>
+                
                 <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="POST" action="{{ route('logearse') }}">
                     @csrf
                     <div class="mb-4">
@@ -38,9 +51,14 @@
                     </div>
                 </form>
                 <p class="text-center text-gray-500 text-xs">
-                    &copy;2020 Grupo 03.
+                    &copy;2024 Grupo 03.
                 </p>
             </div>
         </div>
 </body>
 </html>
+<script>
+    setTimeout(function(){
+        document.getElementById("resultMessage").style.display = "none";
+    }, 2000); // 2000 milisegundos = 2 segundos
+</script>
