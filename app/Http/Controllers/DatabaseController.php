@@ -96,7 +96,7 @@ class DatabaseController extends Controller
         try {
             $this->reiniciaConexion($request);
             $dbType = session()->get('credencialesConsulta')['db_type'];
-            $columns = $this->selectColumnsByTable($dbType,$tableName);
+            $columns = $this->selectColumnsByTable($dbType,$tableName,$request);
             //dd($columns);
             return response()->json(['message' => 'Recibiendo informacion de la tabla...','columnas' => $columns]);
         } catch (\Exception $e) {
@@ -286,15 +286,19 @@ class DatabaseController extends Controller
         // Primero, validar si la columna es autoincrementable
         $dbType = session()->get('credencialesConsulta')['db_type'];
         
-        $nombresColumnas = $this->selectColumnsByTable($dbType,$tabla); //   
+        $nombresColumnas = $this->selectColumnsByTable($dbType,$tabla,$request); //   
 
+        //dd($nombresColumnas);
         $registros = DB::connection('consulta')->select('SELECT * FROM ' . $tabla);
         $total = DB::connection('consulta')->table($tabla)->count();
 
         if($excepcion == 'secuencia'){
+            
             $isAutoIncrement = false;
             foreach ($nombresColumnas as $col) {
+                
                 if ($col->Field == $columna && strpos($col->Extra, 'auto_increment') !== false) {
+                    
                     $isAutoIncrement = true;
                     break;
                 }
@@ -308,9 +312,10 @@ class DatabaseController extends Controller
 
             try {
                 $query = $this->querySecuencialidad($dbType,$tabla,$columna);
+                //dd($query);
                 $resultados = DB::connection('consulta')->select($query);
 
-                //dd($query);
+                
 
                 Historial::create([
                     'conexion' => session()->get('credencialesConsulta')['id'],
@@ -481,7 +486,7 @@ class DatabaseController extends Controller
         // Primero, validar si la columna es autoincrementable
         $dbType = session()->get('credencialesConsulta')['db_type'];
         
-        $nombresColumnas = $this->selectColumnsByTable($dbType,$tabla);     
+        $nombresColumnas = $this->selectColumnsByTable($dbType,$tabla,$request);     
         $registros = DB::connection('consulta')->select('SELECT * FROM ' . $tabla);
 
         if (!$param) {
@@ -621,9 +626,12 @@ class DatabaseController extends Controller
     }
 
     // Para mostrar las columnas de la tabla elegida
-    public function selectColumnsByTable($dbType,$tableName){
+    public function selectColumnsByTable($dbType,$tableName,$request){
         if($dbType == 'mysql'){
-            $columns = DB::connection('consulta')->select("SELECT DISTINCT COLUMN_NAME as 'Field',COLUMN_TYPE as 'Type',Extra,IS_NULLABLE as 'Null', COLUMN_DEFAULT as 'Default' FROM information_schema.columns WHERE TABLE_NAME = '" . $tableName . "'");
+
+            //dd($request->session()->get('credencialesConsulta')['database']);
+            $columns = DB::connection('consulta')->select("SELECT DISTINCT COLUMN_NAME as 'Field', COLUMN_TYPE as 'Type', Extra, IS_NULLABLE as 'Null', COLUMN_DEFAULT as 'Default' FROM information_schema.columns WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?", [$tableName, $request->session()->get('credencialesConsulta')['database']]);
+            
         }else if($dbType == 'sqlsrv'){
             $columns = DB::connection('consulta')->select("SELECT DISTINCT
                 ic.COLUMN_NAME AS Field,
@@ -781,7 +789,7 @@ class DatabaseController extends Controller
 
             $query="
                 SELECT
-                    'Excepción de integridad. El dato con identificador ' + $pkConcatenated + ' en la columna $columnao no son encontrados en la columna $columnad de la tabla $tablad.' 
+                    'Excepción de integridad. En el registro ' + $pkConcatenated + ' de la tabla  $tablao  el dato en la columna $columnao no es encontrado en la columna $columnad de la tabla $tablad.' 
                     as 'message'
                 FROM $tablao o
                 LEFT JOIN $tablad d ON o.$columnao = d.$columnad

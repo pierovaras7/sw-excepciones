@@ -98,7 +98,7 @@
                         mensajeError = error;
                     }
                     $('#metrica').text('');
-                    var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('Error: ' + mensajeError);
+                    var result = $('<div>').addClass('alert alert-info text-center').attr('role', 'alert').text('Error: La sentencia ingresada no tiene una sintaxis correcta. Revisarla. ');
                     $('#resultExcepciones').empty();
                     $('#resultExcepciones').append(result);
 
