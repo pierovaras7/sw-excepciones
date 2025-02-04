@@ -10,8 +10,7 @@ use App\Models\Conexion;
 use App\Models\User;
 use App\Models\Historial;
 use Barryvdh\DomPDF\Facade\Pdf;
-
-
+use Illuminate\Database\QueryException;
 
 class DatabaseController extends Controller
 {
@@ -283,6 +282,7 @@ class DatabaseController extends Controller
         $tabla = $request->input('tabla', null);
         $columna = $request->input('columna', null);
 
+
         // Primero, validar si la columna es autoincrementable
         $dbType = session()->get('credencialesConsulta')['db_type'];
         
@@ -292,13 +292,12 @@ class DatabaseController extends Controller
         $registros = DB::connection('consulta')->select('SELECT * FROM ' . $tabla);
         $total = DB::connection('consulta')->table($tabla)->count();
 
+
         if($excepcion == 'secuencia'){
             
             $isAutoIncrement = false;
             foreach ($nombresColumnas as $col) {
-                
-                if ($col->Field == $columna && strpos($col->Extra, 'auto_increment') !== false) {
-                    
+                if ($col->Field == $columna && strpos(strtoupper($col->EXTRA), 'AUTO_INCREMENT') !== false) {
                     $isAutoIncrement = true;
                     break;
                 }
@@ -392,6 +391,8 @@ class DatabaseController extends Controller
             }
         }
     }
+
+
     public function resultCampos(Request $request){
 
         $tiposFecha = ['date', 'datetime', 'timestamp', 'time', 'year', 'datetime2', 'smalldatetime', 'datetimeoffset'];
@@ -769,23 +770,11 @@ class DatabaseController extends Controller
                         AND CONSTRAINT_TYPE = 'PRIMARY KEY'
                     )
                 ");
-                // $pk = DB::connection('consulta')->select("
-                // SELECT GROUP_CONCAT(COLUMN_NAME SEPARATOR ', ') AS pk_concat
-                // FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
-                // WHERE TABLE_SCHEMA = 'nombre_de_tu_base_de_datos' AND TABLE_NAME = '$tablao' 
-                // AND CONSTRAINT_NAME = (SELECT CONSTRAINT_NAME 
-                //                         FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
-                //                         WHERE TABLE_NAME = '$tablao' 
-                //                         AND CONSTRAINT_TYPE = 'PRIMARY KEY')
-                // ");
+               
         
         $pkConcatenated = implode(", ", array_map(function($col) {
             return "CAST(o.{$col->COLUMN_NAME} AS CHAR)";
         }, $pk));
-
-       
-     
-        // $sqlQuery = "SELECT *, CONCAT('En el registro con identificador(es) ', $pkConcatenated, ' presenta una excepción de campo \"" . $column . "\" para los parametros ingresados.') AS message FROM $tabla $param";
 
             $query="
                 SELECT
