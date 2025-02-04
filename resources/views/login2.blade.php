@@ -52,7 +52,7 @@
                 </form>
                 <div class="flex flex-col items-center">
                     <p class="text-xs">Credentials</p>
-                    <p class="text-xs">User: test_user</p>
+                    <p class="text-xs">Email: test_user@gmail.com</p>
                     <p class="text-xs">Password: test_user</p>
                     <p class="text-xs">&copy;2024 - Piero Varas.</p>
                 </p>
