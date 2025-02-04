@@ -6,7 +6,7 @@ use App\Http\Controllers\UsersController;
 use App\Http\Controllers\DatabaseController;
 
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+
 Route::post('/inicio-sesion', [LoginController::class, 'login'])->name('logearse');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
@@ -62,22 +62,12 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/', function () {
     return view('login2');
 })->name('login');
-    // // Ruta para procesar la conexión
-
-    // Route::get('/ga', [DatabaseController::class, 'instanciar']);
-
-
-    // Ruta para desconectarse
 
 
 
 
 
 
-
-// Route::get('login', function () {
-//     return view('login2');
-// })->name('login');
 
 
 Route::get('/x', function () {
@@ -88,10 +78,3 @@ Route::get('return', function () {
     return view('usuarios.index');
 });
 
-// Route::POST('login', function () {
-//     return view('login');
-// })->name('login');
-
-// Route::get('login', function () {
-//     return view('login');
-// })->name('password.request');

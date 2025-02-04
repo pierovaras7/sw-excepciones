@@ -66,6 +66,6 @@ class LoginController extends Controller
 
         Auth::logout(); // Cerrar sesión del usuario
         
-        return redirect('/login'); // Redirigir a la página de inicio de sesión
+        return redirect('/'); // Redirigir a la página de inicio de sesión
     }
 }
